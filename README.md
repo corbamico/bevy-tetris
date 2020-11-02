@@ -13,7 +13,7 @@ bevy-tetris clone tetris game using rust/bevy
 
 ## Snapshoot
 
-![screen](./docs/screen.png)
+[!screen](./docs/screen.png)
 
 ## Thanks
 
@@ -21,5 +21,5 @@ inspired by [flappy_bevy](https://github.com/TanTanDev/flappy_bevy) and [bevy-sn
 
 ## License
 
-* GPLv3
-* True Type Fonts: DIGITAL-7 version 1.02 (by Sizenko Alexander,Style-7)
+* GPLv3, Copyright by corbamico@163.com
+* Assets digital7mono.ttf: True Type Fonts: DIGITAL-7 version 1.02 (by Sizenko Alexander,Style-7)
