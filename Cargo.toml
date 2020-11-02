@@ -1,0 +1,12 @@
+[package]
+authors = ["corbamico <corbamico@163.com>"]
+edition = "2018"
+name = "bevy-tetris"
+version = "0.1.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+bevy = "0.2"
+lazy_static = "1.4"
+rand = "0.7"
