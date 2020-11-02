@@ -1,10 +1,7 @@
-#![allow(dead_code)]
 use crate::consts::{BOARD_X, BOARD_X_Y, BOARD_Y, BOARD_Y_VALIDE, BRICKS_DICT, BRICKS_TYPES};
 use rand::prelude::*;
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Dot(pub i8, pub i8);
-#[derive(Copy, Clone, Default)]
-pub struct BrickOrgDot(Dot);
 
 impl Dot {
     pub fn with_orignal_dot(&self, orig: &Dot) -> Self {
@@ -128,9 +125,9 @@ impl Board {
             self.0[i] = false
         }
     }
-    pub fn can_clean(&self) -> bool {
-        (0..BOARD_Y).any(|y| self.can_clean_line(y))
-    }
+    // pub fn can_clean(&self) -> bool {
+    //     (0..BOARD_Y).any(|y| self.can_clean_line(y))
+    // }
     pub fn can_clean_line(&self, y: i8) -> bool {
         assert!(0 <= y);
         assert!(y < BOARD_Y);

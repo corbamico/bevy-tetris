@@ -11,7 +11,7 @@ fn main() {
     App::build()
         .add_plugin(screen::ScreenPlugin)
         .add_plugin(inputs::KeyboardPlugin)
-        .add_plugin(tetrom::GameFallingPlugin)
+        .add_plugin(tetrom::BrickMovingPlugin)
         .add_plugin(states::GameScorePlugin)
         .add_default_plugins()
         .add_system(exit_on_esc_system.system())

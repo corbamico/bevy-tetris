@@ -41,6 +41,10 @@ pub(crate) const STRING_GAME_START: &str = "PRESS SPACE";
 pub(crate) const STRING_GAME_PLAYING: &str = "";
 pub(crate) const STRING_GAME_OVER: &str = " GAME OVER \n\nPRESS SPACE";
 
+//delay = 725 * .85 ^ level + level (ms)
+pub(crate) const TIMER_FALLING_MILLIS: u64 = 297;
+pub(crate) const TIMER_KEYBOARD_MILLIS: u64 = 100;
+
 lazy_static! {
     pub static ref BRICKS_DICT: Vec<Vec<Brick>> = vec![
         //O:

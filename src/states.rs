@@ -1,5 +1,6 @@
+use crate::bricks::{Board, Dot};
 use crate::consts::*;
-use crate::tetrom::NewBrickEvent;
+use crate::tetrom::{DotInBoard, NewBrickEvent};
 use bevy::prelude::*;
 struct ScoreText;
 struct LinesText;
@@ -18,11 +19,10 @@ impl Plugin for GameScorePlugin {
             .add_resource(LinesRes(0))
             .add_resource(LevelRes(1))
             .add_resource(GameState(GameStage::Start))
-            .add_stage_after("checking", "update_score")
-            .add_system_to_stage("update_score", score_change.system())
-            .add_system_to_stage("update_score", lines_change.system())
-            .add_system_to_stage("update_score", level_change.system())
-            .add_system_to_stage("update_score", hanle_game_state.system());
+            .add_system_to_stage(stage::UPDATE, score_change.system())
+            .add_system_to_stage(stage::UPDATE, lines_change.system())
+            .add_system_to_stage(stage::UPDATE, level_change.system())
+            .add_system_to_stage(stage::POST_UPDATE, hanle_game_state.system());
     }
 }
 
@@ -62,17 +62,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         GameText,
     );
 }
-fn score_change(score_res: ChangedRes<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
+fn score_change(score_res: ResMut<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{:06}", score_res.0);
     }
 }
-fn lines_change(lines_res: ChangedRes<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
+fn lines_change(lines_res: ResMut<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{:06}", lines_res.0);
     }
 }
-fn level_change(level_res: ChangedRes<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
+fn level_change(level_res: ResMut<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{}", level_res.0);
     }
@@ -110,18 +110,24 @@ fn spwan_text(
         .with(component);
 }
 
-enum GameStage {
+pub enum GameStage {
     Start,
     Playing,
     GameOver,
 }
-struct GameState(GameStage);
+pub struct GameState(pub GameStage);
 
 fn hanle_game_state(
+    mut commands: Commands,
     mut game_state: ResMut<GameState>,
+    mut score_res: ResMut<ScoreRes>,
+    mut lines_res: ResMut<LinesRes>,
+    mut level_res: ResMut<LevelRes>,
+    mut board: ResMut<Board>,
     keyboard: Res<Input<KeyCode>>,
     mut event_sender: ResMut<Events<NewBrickEvent>>,
     mut query: Query<(&GameText, &mut Text)>,
+    mut dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
     match game_state.0 {
         GameStage::Start => {
@@ -134,6 +140,22 @@ fn hanle_game_state(
             }
         }
         GameStage::Playing => {}
-        GameStage::GameOver => {}
+        GameStage::GameOver => {
+            if keyboard.just_pressed(KeyCode::Space) {
+                board.clear();
+                for (entity, _, _) in &mut dots.iter() {
+                    commands.despawn_recursive(entity);
+                }
+                score_res.0 = 0;
+                lines_res.0 = 0;
+                level_res.0 = 1;
+
+                event_sender.send(NewBrickEvent);
+                game_state.0 = GameStage::Playing;
+                for (_, mut text) in &mut query.iter() {
+                    text.value = STRING_GAME_PLAYING.to_string();
+                }
+            }
+        }
     }
 }
