@@ -42,9 +42,7 @@ pub(crate) const STRING_GAME_PLAYING: &str = "";
 pub(crate) const STRING_GAME_OVER: &str = " GAME OVER \n\nPRESS SPACE";
 
 //delay = 725 * .85 ^ level + level (ms)
-pub(crate) const TIMER_FALLING_MILLIS: u64 = 297;
-pub(crate) const TIMER_KEYBOARD_MILLIS: u64 = 100;
-pub(crate) const TIMER_FALLING_SECS: f32 = 0.297;
+pub(crate) const TIMER_FALLING_SECS: f32 = 0.725;
 pub(crate) const TIMER_KEY_SECS: f32 = 0.100;
 
 lazy_static! {

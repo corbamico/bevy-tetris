@@ -1,10 +1,11 @@
 use crate::bricks::*;
 use crate::consts::{
     BOARD_BOTTOM_PX, BOARD_LEFT_PX, BRICK_START_DOT, DOT_WIDTH_PX, NEXT_BRICK_BOTTOM_PX,
-    NEXT_BRICK_LEFT_PX, SCORE_PER_DELETE, SCORE_PER_DROP, STRING_GAME_OVER,
+    NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
 };
-use crate::inputs::{BrickMoveRes, Movements};
-use crate::states::{GameStage, GameState, GameText, LinesRes, ScoreRes};
+use crate::inputs::{BrickMoveRes, FallingTimer, Movements};
+use crate::speeds::{get_level, get_score, get_speed};
+use crate::states::{GameStage, GameState, GameText, LevelRes, LinesRes, ScoreRes};
 use bevy::prelude::*;
 
 pub struct BlackMaterial(Handle<ColorMaterial>);
@@ -306,16 +307,27 @@ fn check_clean_line(
     mut board: ResMut<Board>,
     mut score_res: ResMut<ScoreRes>,
     mut lines_res: ResMut<LinesRes>,
+    mut level_res: ResMut<LevelRes>,
     movement: Res<BrickMoveRes>,
+    mut falling_timer: ResMut<FallingTimer>,
     mut query: Query<(Entity, &mut Dot, &mut DotInBoard)>,
 ) {
     if let Movements::StopTo(_) = movement.0 {
         //deleted_lines should be sorted desc.
         let deleted_lines = board.get_clean_lines();
-        for line in deleted_lines {
-            score_res.0 += SCORE_PER_DELETE;
-            lines_res.0 += 1;
+        let len = deleted_lines.len() as u32;
+        if len > 0 {
+            score_res.0 += get_score(level_res.0, len);
+            score_res.0 += len * SCORE_PER_DROP;
+            lines_res.0 += len;
+            let next_level = get_level(lines_res.0);
+            if level_res.0 != next_level {
+                level_res.0 = next_level;
+                falling_timer.change_sceconds(get_speed(next_level));
+            }
+        }
 
+        for line in deleted_lines {
             for (entity, mut dot, _) in &mut query.iter() {
                 //delete this line.
                 if dot.1 == line {

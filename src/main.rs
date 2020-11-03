@@ -3,9 +3,9 @@ mod bricks;
 mod consts;
 mod inputs;
 mod screen;
+mod speeds;
 mod states;
 mod tetrom;
-
 fn main() {
     use bevy::input::system::exit_on_esc_system;
     App::build()

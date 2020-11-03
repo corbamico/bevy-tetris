@@ -2,7 +2,17 @@ use crate::bricks::{Board, BrickShape, Dot};
 use crate::consts::{BOARD_Y_VALIDE, TIMER_FALLING_SECS, TIMER_KEY_SECS};
 use bevy::prelude::*;
 struct KeyboardTimer(Timer);
-struct FallingTimer(Timer);
+pub struct FallingTimer(Timer);
+
+impl FallingTimer {
+    fn default() -> Self {
+        FallingTimer(Timer::from_seconds(TIMER_FALLING_SECS, true))
+    }
+    pub fn change_sceconds(&mut self, seconds: f32) {
+        self.0 = Timer::from_seconds(seconds, true);
+    }
+}
+
 pub enum Movements {
     None,
     MoveTo(Dot),
@@ -15,7 +25,7 @@ pub struct KeyboardPlugin;
 impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_resource(KeyboardTimer(Timer::from_seconds(TIMER_KEY_SECS, true)))
-            .add_resource(FallingTimer(Timer::from_seconds(TIMER_FALLING_SECS, true)))
+            .add_resource(FallingTimer::default())
             .add_resource(BrickMoveRes(Movements::None))
             .add_system_to_stage(stage::FIRST, handle_keyboard.system());
     }
@@ -37,6 +47,52 @@ fn handle_keyboard(
     movement.0 = Movements::None;
     let mut falling_dot = Dot(0, 0);
 
+    //handle Rotation/Space first.
+    if keyboard.just_pressed(KeyCode::Up) {
+        for (brick_shape, dot) in &mut bricks.iter() {
+            let next_brick = brick_shape.rotate();
+            let next_dot = dot.with_orignal_dot(&falling_dot);
+            if board.valid_brickshape(&next_brick, &next_dot) {
+                movement.0 = Movements::RotateTo(next_dot);
+                return;
+            }
+        }
+    } else if keyboard.just_pressed(KeyCode::Space) {
+        for (brick_shape, dot) in &mut bricks.iter() {
+            let mut next_dot = dot.with_orignal_dot(&falling_dot);
+            next_dot.move_down();
+            for _ in 0..BOARD_Y_VALIDE {
+                if board.valid_brickshape(brick_shape, &next_dot) {
+                    next_dot.move_down();
+                } else {
+                    movement.0 = Movements::StopTo(next_dot.up());
+                    return;
+                }
+            }
+        }
+    }
+    // for (brick_shape, dot) in &mut bricks.iter() {
+    //     if keyboard.just_pressed(KeyCode::Up) {
+    //         let next_brick = brick_shape.rotate();
+    //         let next_dot = dot.with_orignal_dot(&falling_dot);
+
+    //         if board.valid_brickshape(&next_brick, &next_dot) {
+    //             movement.0 = Movements::RotateTo(next_dot);
+    //             return;
+    //         }
+    //     } else if keyboard.just_pressed(KeyCode::Space) {
+    //         let mut next_dot = dot.with_orignal_dot(&falling_dot);
+    //         next_dot.move_down();
+    //         for _ in 0..BOARD_Y_VALIDE {
+    //             if !board.valid_brickshape(brick_shape, &next_dot) {
+    //                 movement.0 = Movements::StopTo(next_dot.up());
+    //                 return;
+    //             }
+    //             next_dot.move_down();
+    //         }
+    //     }
+    //}
+
     if falling_timer.0.finished {
         for (brick_shape, dot) in &mut bricks.iter() {
             let next_position = dot.down();
@@ -50,19 +106,6 @@ fn handle_keyboard(
             }
         }
     }
-    //We should handle both input of Timer(Falling) and Timer(Keyboard)
-    //otherice user will feel no response for keyboard.
-    // let mut key = KeyCode::A;
-    // if keyboard.pressed(KeyCode::Right) {
-    //     key = KeyCode::Right;
-    // } else if keyboard.pressed(KeyCode::Left) {
-    //     key = KeyCode::Left;
-    // } else if keyboard.pressed(KeyCode::Down) {
-    //     key = KeyCode::Down;
-    // } else if keyboard.just_pressed(KeyCode::Up) {
-    //     key = KeyCode::Up;
-    // }
-
     if keyboard_timer.0.finished {
         for (brick_shape, dot) in &mut bricks.iter() {
             if keyboard.pressed(KeyCode::Right) {
@@ -82,23 +125,6 @@ fn handle_keyboard(
                     movement.0 = Movements::MoveTo(next_dot);
                 } else {
                     movement.0 = Movements::StopTo(dot.with_orignal_dot(&falling_dot));
-                }
-            } else if keyboard.pressed(KeyCode::Up) {
-                let next_brick = brick_shape.rotate();
-                let next_dot = dot.with_orignal_dot(&falling_dot);
-
-                if board.valid_brickshape(&next_brick, &next_dot) {
-                    movement.0 = Movements::RotateTo(next_dot);
-                }
-            } else if keyboard.pressed(KeyCode::Space) {
-                let mut next_dot = dot.with_orignal_dot(&falling_dot);
-                next_dot.move_down();
-                for _ in 0..BOARD_Y_VALIDE {
-                    if !board.valid_brickshape(brick_shape, &next_dot) {
-                        movement.0 = Movements::StopTo(next_dot.up());
-                        return;
-                    }
-                    next_dot.move_down();
                 }
             }
         }
