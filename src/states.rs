@@ -22,7 +22,10 @@ impl Plugin for GameScorePlugin {
             .add_system_to_stage(stage::UPDATE, score_change.system())
             .add_system_to_stage(stage::UPDATE, lines_change.system())
             .add_system_to_stage(stage::UPDATE, level_change.system())
-            .add_system_to_stage(stage::POST_UPDATE, hanle_game_state.system());
+            .add_system_to_stage(stage::POST_UPDATE, hanle_game_state.system())
+            .add_system_to_stage(stage::POST_UPDATE, score_change.system())
+            .add_system_to_stage(stage::POST_UPDATE, lines_change.system())
+            .add_system_to_stage(stage::POST_UPDATE, level_change.system());
     }
 }
 
@@ -62,17 +65,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         GameText,
     );
 }
-fn score_change(score_res: ResMut<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
+fn score_change(score_res: ChangedRes<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{:06}", score_res.0);
     }
 }
-fn lines_change(lines_res: ResMut<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
+fn lines_change(lines_res: ChangedRes<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{:06}", lines_res.0);
     }
 }
-fn level_change(level_res: ResMut<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
+fn level_change(level_res: ChangedRes<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
         text.value = format!("{}", level_res.0);
     }

@@ -84,38 +84,34 @@ fn handle_brick_movement(
 ) {
     match movement.0 {
         Movements::None => {}
-        Movements::Left => {
+        Movements::MoveTo(next_dot) => {
             for (_, _, mut dot) in &mut bricks.iter() {
-                dot.move_left();
+                *dot = next_dot;
             }
         }
-        Movements::Right => {
-            for (_, _, mut dot) in &mut bricks.iter() {
-                dot.move_right();
-            }
-        }
-        Movements::Down => {
-            for (_, _, mut dot) in &mut bricks.iter() {
-                dot.move_down();
-            }
-        }
-        Movements::Rotate => {
-            for (entity, brick_shape, dot) in &mut bricks.iter() {
+        Movements::RotateTo(next_dot) => {
+            for (entity, brick_shape, _) in &mut bricks.iter() {
                 let next_shape = brick_shape.rotate();
                 commands.despawn_recursive(entity);
-                spwan_brick(&mut commands, black.0, background.0, next_shape, &dot);
+                spwan_brick(&mut commands, black.0, background.0, next_shape, &next_dot);
             }
         }
-        Movements::Stop => {
+        Movements::StopTo(next_dot) => {
             score_res.0 += SCORE_PER_DROP;
             //step 1. fix this brick to board
-            for (entity, brick_shape, orig) in &mut bricks.iter() {
+            for (entity, brick_shape, _) in &mut bricks.iter() {
                 //notes:
                 //despawn brick and spwan dots with components(DotInBoard)
-                spwan_brick_as_dot(&mut commands, black.0, background.0, *brick_shape, &orig);
+                spwan_brick_as_dot(
+                    &mut commands,
+                    black.0,
+                    background.0,
+                    *brick_shape,
+                    &next_dot,
+                );
                 commands.despawn_recursive(entity);
                 //update game board
-                board.occupy_brickshape(brick_shape, &orig);
+                board.occupy_brickshape(brick_shape, &next_dot);
             }
 
             //step 2. check cleaning lines
@@ -313,7 +309,7 @@ fn check_clean_line(
     movement: Res<BrickMoveRes>,
     mut query: Query<(Entity, &mut Dot, &mut DotInBoard)>,
 ) {
-    if let Movements::Stop = movement.0 {
+    if let Movements::StopTo(_) = movement.0 {
         //deleted_lines should be sorted desc.
         let deleted_lines = board.get_clean_lines();
         for line in deleted_lines {
@@ -343,7 +339,7 @@ fn check_game_over(
     mut query: Query<(&GameText, &mut Text)>,
     mut dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
-    if let Movements::Stop = movement.0 {
+    if let Movements::StopTo(_) = movement.0 {
         if board.game_over() {
             //Game-Over
             //step 1.clear lines for show "game over" string
