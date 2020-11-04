@@ -67,17 +67,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
 }
 fn score_change(score_res: ChangedRes<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
-        text.value = format!("{:06}", score_res.0);
+        text.value = format!("{:06}", score_res.0 % 1000000);
     }
 }
 fn lines_change(lines_res: ChangedRes<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
-        text.value = format!("{:06}", lines_res.0);
+        text.value = format!("{:06}", lines_res.0 % 1000000);
     }
 }
 fn level_change(level_res: ChangedRes<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
     for (_, mut text) in &mut query.iter() {
-        text.value = format!("{}", level_res.0);
+        text.value = format!("{}", level_res.0 % 100);
     }
 }
 fn spwan_text(

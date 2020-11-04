@@ -10,6 +10,8 @@ bevy-tetris clone tetris game using rust/bevy
 * Board Dot(0,0) as Pixel location (13px,13px) as code in consts.rs
 * bricks type as : I,J,L,Z,S,T,O as code in consts.rs
 * rotation system use as simple as Nintendo [here](https://tetris.fandom.com/wiki/Nintendo_Rotation_System)
+* tetris speeding use delay = 725 * .85 ^ level + level from [dwhacks](http://gist.github.com/dwhacks/8644250), refer to src/speeds.rs
+* tetris scoring use [Original Nintendo Scoring System](https://tetris.fandom.com/wiki/Scoring), refer to src/speeds.rs
 
 ## Snapshoot
 
