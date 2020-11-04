@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 use bevy::prelude::*;
 mod bricks;
 mod consts;
@@ -14,7 +14,7 @@ fn main() {
         .add_plugin(inputs::KeyboardPlugin)
         .add_plugin(tetrom::BrickMovingPlugin)
         .add_plugin(states::GameScorePlugin)
-        .add_default_plugins()
+        .add_plugins(DefaultPlugins)
         .add_system(exit_on_esc_system.system())
         .run();
 }

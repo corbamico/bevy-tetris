@@ -20,7 +20,7 @@ fn setup(
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
-    let start_handle = asset_server.load("assets/screen.png").unwrap();
+    let start_handle = asset_server.load("screen.png");
     commands
         .spawn(Camera2dComponents::default())
         .spawn(SpriteComponents {

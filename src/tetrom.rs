@@ -48,7 +48,7 @@ impl Plugin for BrickMovingPlugin {
 
 fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
     let black = materials.add(Color::rgb_u8(0, 0, 0).into());
-    let background = materials.add(Color::rgb_u8(100, 109, 84).into());
+    let background = materials.add(Color::rgb_u8(158, 173, 135).into());
     let brick_next = BrickNext::new();
 
     commands
@@ -62,7 +62,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
 }
 
 fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
-    for (dot, mut style) in &mut q.iter() {
+    for (dot, mut style) in &mut q.iter_mut() {
         if style.position_type == PositionType::Absolute {
             style.position = Rect {
                 left: Val::Px(dot_to_screen_x(&dot)),
@@ -81,32 +81,39 @@ fn handle_brick_movement(
 
     black: Res<BlackMaterial>,
     background: Res<BackgroundMaterial>,
+
     mut bricks: Query<(Entity, &BrickShape, &mut Dot)>,
 ) {
     match movement.0 {
         Movements::None => {}
         Movements::MoveTo(next_dot) => {
-            for (_, _, mut dot) in &mut bricks.iter() {
+            for (_, _, mut dot) in &mut bricks.iter_mut() {
                 *dot = next_dot;
             }
         }
         Movements::RotateTo(next_dot) => {
-            for (entity, brick_shape, _) in &mut bricks.iter() {
+            for (entity, brick_shape, _) in &mut bricks.iter_mut() {
                 let next_shape = brick_shape.rotate();
                 commands.despawn_recursive(entity);
-                spwan_brick(&mut commands, black.0, background.0, next_shape, &next_dot);
+                spwan_brick(
+                    &mut commands,
+                    black.0.clone(),
+                    background.0.clone(),
+                    next_shape,
+                    &next_dot,
+                );
             }
         }
         Movements::StopTo(next_dot) => {
             score_res.0 += SCORE_PER_DROP;
             //step 1. fix this brick to board
-            for (entity, brick_shape, _) in &mut bricks.iter() {
+            for (entity, brick_shape, _) in &mut bricks.iter_mut() {
                 //notes:
                 //despawn brick and spwan dots with components(DotInBoard)
                 spwan_brick_as_dot(
                     &mut commands,
-                    black.0,
-                    background.0,
+                    black.0.clone(),
+                    background.0.clone(),
                     *brick_shape,
                     &next_dot,
                 );
@@ -166,8 +173,8 @@ fn spwan_brick_as_dot(
     for i in 0..4 {
         spwan_board_dot(
             commands,
-            black,
-            background,
+            black.clone(),
+            background.clone(),
             &brick.dots[i].with_orignal_dot(orig),
         );
     }
@@ -212,9 +219,9 @@ fn spwan_brick_at(
         })
         .with_children(|child| {
             let brick: Brick = brick.into();
-            spwan_child_dot(child, black, background, &brick.dots[0]);
-            spwan_child_dot(child, black, background, &brick.dots[1]);
-            spwan_child_dot(child, black, background, &brick.dots[2]);
+            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[0]);
+            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[1]);
+            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[2]);
             spwan_child_dot(child, black, background, &brick.dots[3]);
         });
 }
@@ -253,7 +260,7 @@ fn spwan_child_dot(
 ) {
     commands
         .spawn(NodeComponents {
-            material: black,
+            material: black.clone(),
             style: Style {
                 size: Size::new(Val::Px(20.0), Val::Px(20.0)),
                 position_type: PositionType::Absolute,
@@ -328,7 +335,7 @@ fn check_clean_line(
         }
 
         for line in deleted_lines {
-            for (entity, mut dot, _) in &mut query.iter() {
+            for (entity, mut dot, _) in &mut query.iter_mut() {
                 //delete this line.
                 if dot.1 == line {
                     commands.despawn_recursive(entity);
@@ -350,7 +357,7 @@ fn check_game_over(
     brick_next: Res<BrickNext>,
     mut game_state: ResMut<GameState>,
     mut query: Query<(&GameText, &mut Text)>,
-    mut dots: Query<(Entity, &Dot, &DotInBoard)>,
+    dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
     if let Movements::StopTo(Dot(_, y)) = movement.0 {
         if y >= BOARD_Y_VALIDE
@@ -365,7 +372,7 @@ fn check_game_over(
                 }
             }
             //step 2.show text "game over"
-            for (_, mut text) in &mut query.iter() {
+            for (_, mut text) in &mut query.iter_mut() {
                 text.value = STRING_GAME_OVER.to_string();
             }
             //step 3.change state
@@ -383,13 +390,13 @@ fn generate_new_brick(
     black: Res<BlackMaterial>,
     background: Res<BackgroundMaterial>,
     mut brick_next: ResMut<BrickNext>,
-    mut query: Query<(Entity, &BrickNextTag)>,
+    query: Query<(Entity, &BrickNextTag)>,
 ) {
     if reader.iter(&events).next().is_some() {
         spwan_brick(
             &mut commands,
-            black.0,
-            background.0,
+            black.0.clone(),
+            background.0.clone(),
             brick_next.curr,
             &BRICK_START_DOT,
         );
@@ -397,7 +404,12 @@ fn generate_new_brick(
         for (entity, _) in &mut query.iter() {
             commands.despawn_recursive(entity);
         }
-        spwan_brick_next(&mut commands, black.0, background.0, brick_next.curr);
+        spwan_brick_next(
+            &mut commands,
+            black.0.clone(),
+            background.0.clone(),
+            brick_next.curr,
+        );
     }
 }
 

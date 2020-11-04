@@ -7,6 +7,9 @@ version = "0.1.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.2"
+#complie sucess with
+#bevy = "0.3.0"
+
+bevy = "0.3"
 lazy_static = "1.4"
 rand = "0.7"

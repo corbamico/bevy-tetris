@@ -30,11 +30,11 @@ impl Plugin for GameScorePlugin {
 }
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font_handle = asset_server.load("assets/digital7mono.ttf").unwrap();
+    let font_handle = asset_server.load("digital7mono.ttf");
     commands.spawn(UiCameraComponents::default());
     spwan_text(
         &mut commands,
-        font_handle,
+        font_handle.clone(),
         "000000",
         TEXT_SCORE_X,
         TEXT_SCORE_Y,
@@ -42,7 +42,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     spwan_text(
         &mut commands,
-        font_handle,
+        font_handle.clone(),
         "0",
         TEXT_LINES_X,
         TEXT_LINES_Y,
@@ -50,7 +50,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     spwan_text(
         &mut commands,
-        font_handle,
+        font_handle.clone(),
         "0",
         TEXT_LEVEL_X,
         TEXT_LEVEL_Y,
@@ -58,7 +58,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     spwan_text(
         &mut commands,
-        font_handle,
+        font_handle.clone(),
         STRING_GAME_START,
         TEXT_GAME_X,
         TEXT_GAME_Y,
@@ -66,17 +66,17 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
 }
 fn score_change(score_res: ChangedRes<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter() {
+    for (_, mut text) in &mut query.iter_mut() {
         text.value = format!("{:06}", score_res.0 % 1000000);
     }
 }
 fn lines_change(lines_res: ChangedRes<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter() {
+    for (_, mut text) in &mut query.iter_mut() {
         text.value = format!("{:06}", lines_res.0 % 1000000);
     }
 }
 fn level_change(level_res: ChangedRes<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter() {
+    for (_, mut text) in &mut query.iter_mut() {
         text.value = format!("{}", level_res.0 % 100);
     }
 }
@@ -130,14 +130,14 @@ fn hanle_game_state(
     keyboard: Res<Input<KeyCode>>,
     mut event_sender: ResMut<Events<NewBrickEvent>>,
     mut query: Query<(&GameText, &mut Text)>,
-    mut dots: Query<(Entity, &Dot, &DotInBoard)>,
+    dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
     match game_state.0 {
         GameStage::Start => {
             if keyboard.just_pressed(KeyCode::Space) {
                 event_sender.send(NewBrickEvent);
                 game_state.0 = GameStage::Playing;
-                for (_, mut text) in &mut query.iter() {
+                for (_, mut text) in &mut query.iter_mut() {
                     text.value = STRING_GAME_PLAYING.to_string();
                 }
             }
@@ -155,7 +155,7 @@ fn hanle_game_state(
 
                 event_sender.send(NewBrickEvent);
                 game_state.0 = GameStage::Playing;
-                for (_, mut text) in &mut query.iter() {
+                for (_, mut text) in &mut query.iter_mut() {
                     text.value = STRING_GAME_PLAYING.to_string();
                 }
             }

@@ -39,7 +39,7 @@ fn handle_keyboard(
     mut falling_timer: ResMut<FallingTimer>,
     mut movement: ResMut<BrickMoveRes>,
     board: Res<Board>,
-    mut bricks: Query<(&BrickShape, &Dot)>,
+    bricks: Query<(&BrickShape, &Dot)>,
 ) {
     keyboard_timer.0.tick(time.delta_seconds);
     falling_timer.0.tick(time.delta_seconds);
