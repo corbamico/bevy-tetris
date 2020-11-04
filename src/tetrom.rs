@@ -1,7 +1,7 @@
 use crate::bricks::*;
 use crate::consts::{
-    BOARD_BOTTOM_PX, BOARD_LEFT_PX, BRICK_START_DOT, DOT_WIDTH_PX, NEXT_BRICK_BOTTOM_PX,
-    NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
+    BOARD_BOTTOM_PX, BOARD_LEFT_PX, BOARD_Y_VALIDE, BRICK_START_DOT, DOT_WIDTH_PX,
+    NEXT_BRICK_BOTTOM_PX, NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
 };
 use crate::inputs::{BrickMoveRes, FallingTimer, Movements};
 use crate::speeds::{get_level, get_score, get_speed};
@@ -347,12 +347,16 @@ fn check_game_over(
     mut event_sender: ResMut<Events<NewBrickEvent>>,
     movement: Res<BrickMoveRes>,
     board: ResMut<Board>,
+    brick_next: Res<BrickNext>,
     mut game_state: ResMut<GameState>,
     mut query: Query<(&GameText, &mut Text)>,
     mut dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
-    if let Movements::StopTo(_) = movement.0 {
-        if board.game_over() {
+    if let Movements::StopTo(Dot(_, y)) = movement.0 {
+        if y >= BOARD_Y_VALIDE
+            || board.game_over()
+            || !board.valid_brickshape(&brick_next.curr, &BRICK_START_DOT)
+        {
             //Game-Over
             //step 1.clear lines for show "game over" string
             for (entity, dot, _) in &mut dots.iter() {

@@ -1,3 +1,4 @@
+//#![windows_subsystem = "windows"]
 use bevy::prelude::*;
 mod bricks;
 mod consts;
