@@ -15,7 +15,7 @@ bevy-tetris clone tetris game using rust/bevy
 
 ## Snapshoot
 
-[!screen](./docs/screen.png)
+![screen](./docs/screen.png)
 
 ## Thanks
 
