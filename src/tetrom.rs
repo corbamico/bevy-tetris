@@ -57,7 +57,7 @@ fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
         .insert_resource(BackgroundMaterial(background))
         .insert_resource(brick_next);
 
-    //Test Point:
+    //We can draw test dot in screen here:
     //spwan_board_dot(&mut commands, black, background, &Dot(9, 0));
 }
 
@@ -365,13 +365,13 @@ fn check_game_over(
             || !board.valid_brickshape(&brick_next.curr, &BRICK_START_DOT)
         {
             //Game-Over
-            //step 1.clear lines for show "game over" string
+            //step 1.clear some lines for show "Game Over" string
             for (entity, dot, _) in &mut dots.iter() {
                 if dot_in_game_text(dot) {
                     commands.despawn_recursive(entity);
                 }
             }
-            //step 2.show text "game over"
+            //step 2.show text "Game Over"
             for (_, mut text) in &mut query.iter_mut() {
                 text.value = STRING_GAME_OVER.to_string();
             }

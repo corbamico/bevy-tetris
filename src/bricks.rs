@@ -56,7 +56,6 @@ impl BrickShape {
     pub fn rand() -> Self {
         let index = rand::thread_rng().gen_range(0, BRICKS_TYPES);
         Self(index, 0)
-        //Self(0, 0)
     }
     pub fn rotate(&self) -> Self {
         Self(self.0, (self.1 + 1) % BRICKS_DICT[self.0].len())
@@ -128,19 +127,16 @@ impl Board {
             self.0[i] = false
         }
     }
-    // pub fn can_clean(&self) -> bool {
-    //     (0..BOARD_Y).any(|y| self.can_clean_line(y))
-    // }
     pub fn can_clean_line(&self, y: i8) -> bool {
         assert!(0 <= y);
-        assert!(y < BOARD_Y);
+        assert!(y < BOARD_Y_VALIDE);
         self.0[Self::index(&Dot(0, y))..Self::index(&Dot(0, y + 1))]
             .iter()
             .all(|x| *x)
     }
     pub fn get_clean_lines(&self) -> Vec<i8> {
         let mut vec = Vec::with_capacity(4);
-        for i in (0..BOARD_Y).rev() {
+        for i in (0..BOARD_Y_VALIDE).rev() {
             if self.can_clean_line(i) {
                 vec.push(i);
             }
@@ -156,7 +152,7 @@ impl Board {
 
     pub fn clean_line(&mut self, y: i8) {
         assert!(0 <= y);
-        assert!(y < BOARD_Y);
+        assert!(y < BOARD_Y_VALIDE);
 
         let dst_below = Self::index(&Dot(0, y));
         let src_below = Self::index(&Dot(0, y + 1));

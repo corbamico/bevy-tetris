@@ -31,7 +31,8 @@ impl Plugin for KeyboardPlugin {
     }
 }
 
-///handle_keyboard handle all inputs, including every tick of falling brick.
+///handle_keyboard handle all inputs,  
+///including every tick of falling brick.
 fn handle_keyboard(
     keyboard: Res<Input<KeyCode>>,
     time: Res<Time>,
@@ -71,28 +72,6 @@ fn handle_keyboard(
             }
         }
     }
-    // for (brick_shape, dot) in &mut bricks.iter() {
-    //     if keyboard.just_pressed(KeyCode::Up) {
-    //         let next_brick = brick_shape.rotate();
-    //         let next_dot = dot.with_orignal_dot(&falling_dot);
-
-    //         if board.valid_brickshape(&next_brick, &next_dot) {
-    //             movement.0 = Movements::RotateTo(next_dot);
-    //             return;
-    //         }
-    //     } else if keyboard.just_pressed(KeyCode::Space) {
-    //         let mut next_dot = dot.with_orignal_dot(&falling_dot);
-    //         next_dot.move_down();
-    //         for _ in 0..BOARD_Y_VALIDE {
-    //             if !board.valid_brickshape(brick_shape, &next_dot) {
-    //                 movement.0 = Movements::StopTo(next_dot.up());
-    //                 return;
-    //             }
-    //             next_dot.move_down();
-    //         }
-    //     }
-    //}
-
     if falling_timer.0.finished {
         for (brick_shape, dot) in &mut bricks.iter() {
             let next_position = dot.down();

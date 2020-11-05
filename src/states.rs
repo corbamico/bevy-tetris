@@ -6,7 +6,7 @@ struct ScoreText;
 struct LinesText;
 struct LevelText;
 
-//for game start, and game over
+//for 'Game Start', and 'Game Over'
 pub struct GameText;
 pub struct ScoreRes(pub u32);
 pub struct LinesRes(pub u32);
