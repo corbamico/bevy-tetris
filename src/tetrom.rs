@@ -1,15 +1,9 @@
 use crate::bricks::*;
-use crate::consts::{
-    BOARD_BOTTOM_PX, BOARD_LEFT_PX, BOARD_Y_VALIDE, BRICK_START_DOT, DOT_WIDTH_PX,
-    NEXT_BRICK_BOTTOM_PX, NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
-};
+use crate::consts::*;
 use crate::inputs::{BrickMoveRes, FallingTimer, Movements};
-use crate::speeds::{get_level, get_score, get_speed};
-use crate::states::{GameStage, GameState, GameText, LevelRes, LinesRes, ScoreRes};
+use crate::screen::Materials;
+use crate::states::{GameData, GameState, GameText};
 use bevy::prelude::*;
-
-pub struct BlackMaterial(Handle<ColorMaterial>);
-pub struct BackgroundMaterial(Handle<ColorMaterial>);
 
 //for Resource
 struct BrickNext {
@@ -46,15 +40,11 @@ impl Plugin for BrickMovingPlugin {
     }
 }
 
-fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
-    let black = materials.add(Color::rgb_u8(0, 0, 0).into());
-    let background = materials.add(Color::rgb_u8(158, 173, 135).into());
+fn setup(mut commands: Commands) {
     let brick_next = BrickNext::new();
 
     commands
         .insert_resource(Board::default())
-        .insert_resource(BlackMaterial(black))
-        .insert_resource(BackgroundMaterial(background))
         .insert_resource(brick_next);
 
     //We can draw test dot in screen here:
@@ -76,12 +66,8 @@ fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
 fn handle_brick_movement(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut score_res: ResMut<ScoreRes>,
     movement: Res<BrickMoveRes>,
-
-    black: Res<BlackMaterial>,
-    background: Res<BackgroundMaterial>,
-
+    materials: Res<Materials>,
     mut bricks: Query<(Entity, &BrickShape, &mut Dot)>,
 ) {
     match movement.0 {
@@ -97,23 +83,22 @@ fn handle_brick_movement(
                 commands.despawn_recursive(entity);
                 spwan_brick(
                     &mut commands,
-                    black.0.clone(),
-                    background.0.clone(),
+                    materials.black.clone(),
+                    materials.background.clone(),
                     next_shape,
                     &next_dot,
                 );
             }
         }
         Movements::StopTo(next_dot) => {
-            score_res.0 += SCORE_PER_DROP;
             //step 1. fix this brick to board
             for (entity, brick_shape, _) in &mut bricks.iter_mut() {
                 //notes:
                 //despawn brick and spwan dots with components(DotInBoard)
                 spwan_brick_as_dot(
                     &mut commands,
-                    black.0.clone(),
-                    background.0.clone(),
+                    materials.black.clone(),
+                    materials.background.clone(),
                     *brick_shape,
                     &next_dot,
                 );
@@ -312,9 +297,7 @@ pub struct NewBrickEvent;
 fn check_clean_line(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut score_res: ResMut<ScoreRes>,
-    mut lines_res: ResMut<LinesRes>,
-    mut level_res: ResMut<LevelRes>,
+    mut game_data: ResMut<GameData>,
     movement: Res<BrickMoveRes>,
     mut falling_timer: ResMut<FallingTimer>,
     mut query: Query<(Entity, &mut Dot, &mut DotInBoard)>,
@@ -323,14 +306,11 @@ fn check_clean_line(
         //deleted_lines should be sorted desc.
         let deleted_lines = board.get_clean_lines();
         let len = deleted_lines.len() as u32;
+        game_data.add_score(SCORE_PER_DROP);
+
         if len > 0 {
-            score_res.0 += get_score(level_res.0, len);
-            score_res.0 += len * SCORE_PER_DROP;
-            lines_res.0 += len;
-            let next_level = get_level(lines_res.0);
-            if level_res.0 != next_level {
-                level_res.0 = next_level;
-                falling_timer.change_sceconds(get_speed(next_level));
+            if game_data.add_lines(len) {
+                falling_timer.change_sceconds(game_data.get_speed());
             }
         }
 
@@ -355,7 +335,7 @@ fn check_game_over(
     movement: Res<BrickMoveRes>,
     board: ResMut<Board>,
     brick_next: Res<BrickNext>,
-    mut game_state: ResMut<GameState>,
+    mut game_data: ResMut<GameData>,
     mut query: Query<(&GameText, &mut Text)>,
     dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
@@ -376,7 +356,7 @@ fn check_game_over(
                 text.value = STRING_GAME_OVER.to_string();
             }
             //step 3.change state
-            game_state.0 = GameStage::GameOver
+            game_data.game_state = GameState::GameOver
         } else {
             event_sender.send(NewBrickEvent);
         }
@@ -387,16 +367,15 @@ fn generate_new_brick(
     mut commands: Commands,
     mut reader: Local<EventReader<NewBrickEvent>>,
     events: Res<Events<NewBrickEvent>>,
-    black: Res<BlackMaterial>,
-    background: Res<BackgroundMaterial>,
+    materials: Res<Materials>,
     mut brick_next: ResMut<BrickNext>,
     query: Query<(Entity, &BrickNextTag)>,
 ) {
     if reader.iter(&events).next().is_some() {
         spwan_brick(
             &mut commands,
-            black.0.clone(),
-            background.0.clone(),
+            materials.black.clone(),
+            materials.background.clone(),
             brick_next.curr,
             &BRICK_START_DOT,
         );
@@ -406,8 +385,8 @@ fn generate_new_brick(
         }
         spwan_brick_next(
             &mut commands,
-            black.0.clone(),
-            background.0.clone(),
+            materials.black.clone(),
+            materials.background.clone(),
             brick_next.curr,
         );
     }

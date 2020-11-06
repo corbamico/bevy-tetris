@@ -13,13 +13,13 @@ pub fn get_speed(level: u32) -> f32 {
 pub fn get_score(level: u32, erase_lines: u32) -> u32 {
     assert!(0 < erase_lines);
     assert!(erase_lines <= 4);
-    vec![40, 100, 300, 1200][(erase_lines - 1) as usize] * level
+    vec![40, 100, 300, 1200][(erase_lines - 1) as usize] * (level + 1)
 }
 
 ///level  
 ///increase level every 10 lines.
 pub fn get_level(total_lines: u32) -> u32 {
-    let level = 1 + total_lines / 10;
+    let level = total_lines / 10;
     if level <= 99 {
         level
     } else {
