@@ -4,8 +4,8 @@ use crate::consts::{
     NEXT_BRICK_BOTTOM_PX, NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
 };
 use crate::inputs::{BrickMoveRes, FallingTimer, Movements};
-use crate::speeds::{get_level, get_score, get_speed};
-use crate::states::{GameStage, GameState, GameText, LevelRes, LinesRes, ScoreRes};
+use crate::screen::Materials;
+use crate::states::{GameData, GameState, GameText};
 use bevy::prelude::*;
 
 pub struct BlackMaterial(Handle<ColorMaterial>);
@@ -76,7 +76,6 @@ fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
 fn handle_brick_movement(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut score_res: ResMut<ScoreRes>,
     movement: Res<BrickMoveRes>,
 
     black: Res<BlackMaterial>,
@@ -105,7 +104,6 @@ fn handle_brick_movement(
             }
         }
         Movements::StopTo(next_dot) => {
-            score_res.0 += SCORE_PER_DROP;
             //step 1. fix this brick to board
             for (entity, brick_shape, _) in &mut bricks.iter_mut() {
                 //notes:
@@ -312,9 +310,7 @@ pub struct NewBrickEvent;
 fn check_clean_line(
     mut commands: Commands,
     mut board: ResMut<Board>,
-    mut score_res: ResMut<ScoreRes>,
-    mut lines_res: ResMut<LinesRes>,
-    mut level_res: ResMut<LevelRes>,
+    mut game_data: ResMut<GameData>,
     movement: Res<BrickMoveRes>,
     mut falling_timer: ResMut<FallingTimer>,
     mut query: Query<(Entity, &mut Dot, &mut DotInBoard)>,
@@ -323,14 +319,11 @@ fn check_clean_line(
         //deleted_lines should be sorted desc.
         let deleted_lines = board.get_clean_lines();
         let len = deleted_lines.len() as u32;
+        game_data.add_score(SCORE_PER_DROP);
+
         if len > 0 {
-            score_res.0 += get_score(level_res.0, len);
-            score_res.0 += len * SCORE_PER_DROP;
-            lines_res.0 += len;
-            let next_level = get_level(lines_res.0);
-            if level_res.0 != next_level {
-                level_res.0 = next_level;
-                falling_timer.change_sceconds(get_speed(next_level));
+            if game_data.add_lines(len) {
+                falling_timer.change_sceconds(game_data.get_speed());
             }
         }
 
@@ -355,7 +348,7 @@ fn check_game_over(
     movement: Res<BrickMoveRes>,
     board: ResMut<Board>,
     brick_next: Res<BrickNext>,
-    mut game_state: ResMut<GameState>,
+    mut game_data: ResMut<GameData>,
     mut query: Query<(&GameText, &mut Text)>,
     dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
@@ -376,7 +369,7 @@ fn check_game_over(
                 text.value = STRING_GAME_OVER.to_string();
             }
             //step 3.change state
-            game_state.0 = GameStage::GameOver
+            game_data.game_state = GameState::GameOver
         } else {
             event_sender.send(NewBrickEvent);
         }

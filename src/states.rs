@@ -1,5 +1,7 @@
 use crate::bricks::{Board, Dot};
 use crate::consts::*;
+use crate::screen::Materials;
+use crate::speeds::{get_level, get_score, get_speed};
 use crate::tetrom::{DotInBoard, NewBrickEvent};
 use bevy::prelude::*;
 struct ScoreText;
@@ -8,33 +10,62 @@ struct LevelText;
 
 //for 'Game Start', and 'Game Over'
 pub struct GameText;
-pub struct ScoreRes(pub u32);
-pub struct LinesRes(pub u32);
-pub struct LevelRes(pub u32);
+
+pub enum GameState {
+    Start,
+    Playing,
+    GameOver,
+}
+pub struct GameData {
+    score: u32,
+    lines: u32,
+    level: u32,
+    pub game_state: GameState,
+}
+
+impl Default for GameData {
+    fn default() -> Self {
+        Self {
+            score: 0,
+            lines: 0,
+            level: 0,
+            game_state: GameState::Start,
+        }
+    }
+}
+impl GameData {
+    pub fn add_score(&mut self, score: u32) {
+        self.score += score;
+    }
+    //return true, if level changed
+    pub fn add_lines(&mut self, lines: u32) -> bool {
+        let previous_level = self.level;
+        self.score += get_score(self.level, lines);
+        self.lines += lines;
+        self.level = get_level(self.lines);
+        previous_level != self.level
+    }
+    pub fn get_speed(&self) -> f32 {
+        get_speed(self.level)
+    }
+}
+
 pub struct GameScorePlugin;
 impl Plugin for GameScorePlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(setup.system())
-            .add_resource(ScoreRes(0))
-            .add_resource(LinesRes(0))
-            .add_resource(LevelRes(1))
-            .add_resource(GameState(GameStage::Start))
-            .add_system_to_stage(stage::UPDATE, score_change.system())
-            .add_system_to_stage(stage::UPDATE, lines_change.system())
-            .add_system_to_stage(stage::UPDATE, level_change.system())
-            .add_system_to_stage(stage::POST_UPDATE, hanle_game_state.system())
-            .add_system_to_stage(stage::POST_UPDATE, score_change.system())
-            .add_system_to_stage(stage::POST_UPDATE, lines_change.system())
-            .add_system_to_stage(stage::POST_UPDATE, level_change.system());
+            .add_resource(GameData::default())
+            .add_system_to_stage(stage::UPDATE, handle_game_data.system())
+            .add_system_to_stage(stage::POST_UPDATE, handle_game_state.system())
+            .add_system_to_stage(stage::POST_UPDATE, handle_game_data.system());
     }
 }
 
-fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let font_handle = asset_server.load("digital7mono.ttf");
+fn setup(mut commands: Commands, materials: Res<Materials>) {
     commands.spawn(UiCameraComponents::default());
     spwan_text(
         &mut commands,
-        font_handle.clone(),
+        materials.font.clone(),
         "000000",
         TEXT_SCORE_X,
         TEXT_SCORE_Y,
@@ -42,7 +73,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     spwan_text(
         &mut commands,
-        font_handle.clone(),
+        materials.font.clone(),
         "0",
         TEXT_LINES_X,
         TEXT_LINES_Y,
@@ -50,36 +81,39 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     );
     spwan_text(
         &mut commands,
-        font_handle.clone(),
-        "0",
+        materials.font.clone(),
+        "00",
         TEXT_LEVEL_X,
         TEXT_LEVEL_Y,
         LevelText,
     );
     spwan_text(
         &mut commands,
-        font_handle.clone(),
+        materials.font.clone(),
         STRING_GAME_START,
         TEXT_GAME_X,
         TEXT_GAME_Y,
         GameText,
     );
 }
-fn score_change(score_res: ChangedRes<ScoreRes>, mut query: Query<(&ScoreText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter_mut() {
-        text.value = format!("{:06}", score_res.0 % 1000000);
+
+fn handle_game_data(
+    game_data: ChangedRes<GameData>,
+    mut score: Query<(&ScoreText, &mut Text)>,
+    mut lines: Query<(&LinesText, &mut Text)>,
+    mut level: Query<(&LevelText, &mut Text)>,
+) {
+    for (_, mut text) in &mut score.iter_mut() {
+        text.value = format!("{:06}", game_data.score % 1000000);
+    }
+    for (_, mut text) in &mut lines.iter_mut() {
+        text.value = format!("{:06}", game_data.lines % 1000000);
+    }
+    for (_, mut text) in &mut level.iter_mut() {
+        text.value = format!("{:02}", game_data.level % 100);
     }
 }
-fn lines_change(lines_res: ChangedRes<LinesRes>, mut query: Query<(&LinesText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter_mut() {
-        text.value = format!("{:06}", lines_res.0 % 1000000);
-    }
-}
-fn level_change(level_res: ChangedRes<LevelRes>, mut query: Query<(&LevelText, &mut Text)>) {
-    for (_, mut text) in &mut query.iter_mut() {
-        text.value = format!("{}", level_res.0 % 100);
-    }
-}
+
 fn spwan_text(
     commands: &mut Commands,
     font_handle: Handle<Font>,
@@ -113,48 +147,39 @@ fn spwan_text(
         .with(component);
 }
 
-pub enum GameStage {
-    Start,
-    Playing,
-    GameOver,
-}
-pub struct GameState(pub GameStage);
-
-fn hanle_game_state(
+fn handle_game_state(
     mut commands: Commands,
-    mut game_state: ResMut<GameState>,
-    mut score_res: ResMut<ScoreRes>,
-    mut lines_res: ResMut<LinesRes>,
-    mut level_res: ResMut<LevelRes>,
+    //_game_data: ChangedRes<GameData>,
+    mut game_data: ResMut<GameData>,
     mut board: ResMut<Board>,
     keyboard: Res<Input<KeyCode>>,
     mut event_sender: ResMut<Events<NewBrickEvent>>,
     mut query: Query<(&GameText, &mut Text)>,
     dots: Query<(Entity, &Dot, &DotInBoard)>,
 ) {
-    match game_state.0 {
-        GameStage::Start => {
+    match game_data.game_state {
+        GameState::Start => {
             if keyboard.just_pressed(KeyCode::Space) {
                 event_sender.send(NewBrickEvent);
-                game_state.0 = GameStage::Playing;
+                game_data.game_state = GameState::Playing;
                 for (_, mut text) in &mut query.iter_mut() {
                     text.value = STRING_GAME_PLAYING.to_string();
                 }
             }
         }
-        GameStage::Playing => {}
-        GameStage::GameOver => {
+        GameState::Playing => {}
+        GameState::GameOver => {
             if keyboard.just_pressed(KeyCode::Space) {
                 board.clear();
                 for (entity, _, _) in &mut dots.iter() {
                     commands.despawn_recursive(entity);
                 }
-                score_res.0 = 0;
-                lines_res.0 = 0;
-                level_res.0 = 1;
+                game_data.score = 0;
+                game_data.lines = 0;
+                game_data.level = 0;
 
                 event_sender.send(NewBrickEvent);
-                game_state.0 = GameStage::Playing;
+                game_data.game_state = GameState::Playing;
                 for (_, mut text) in &mut query.iter_mut() {
                     text.value = STRING_GAME_PLAYING.to_string();
                 }
