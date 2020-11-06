@@ -1,5 +1,9 @@
 # bevy-tetris
 
+![GitHub Action](https://github.com/corbamico/bevy-tetris/workflows/Rust/badge.svg)
+[![dependency status](https://deps.rs/repo/github/corbamico/bevy-tetris/status.svg)](https://deps.rs/repo/github/corbamico/bevy-tetris)
+[![Github license](https://img.shields.io/github/license/corbamico/bevy-tetris.svg)](https://github.com/corbamico/bevy-tetris/blob/master/LICENSE)  
+
 bevy-tetris clone tetris game using rust/bevy
 
 ## Some Notes in Coding
