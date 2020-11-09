@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+//#![allow(dead_code)]
 use crate::bricks::{Brick, Dot};
 use lazy_static::*;
 
@@ -34,7 +34,6 @@ pub(crate) const BRICK_START_DOT: Dot = Dot(3, 18);
 
 pub(crate) const BRICKS_TYPES: usize = 7;
 
-pub(crate) const SCORE_PER_DELETE: u32 = 100;
 pub(crate) const SCORE_PER_DROP: u32 = 10;
 
 pub(crate) const STRING_GAME_START: &str = "PRESS SPACE";

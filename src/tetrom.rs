@@ -32,7 +32,7 @@ impl Plugin for BrickMovingPlugin {
     fn build(&self, app: &mut AppBuilder) {
         app.add_startup_system(setup.system())
             .add_event::<NewBrickEvent>()
-            .add_system_to_stage(stage::PRE_UPDATE, handle_brick_movement.system())
+            .add_system_to_stage(stage::EVENT, handle_brick_movement.system())
             .add_system_to_stage(stage::UPDATE, check_clean_line.system())
             .add_system_to_stage(stage::UPDATE, check_game_over.system())
             .add_system_to_stage(stage::UPDATE, generate_new_brick.system())
@@ -155,14 +155,14 @@ fn spwan_brick_as_dot(
     orig: &Dot,
 ) {
     let brick: Brick = brick.into();
-    for i in 0..4 {
+    (0..4).for_each(|i| {
         spwan_board_dot(
             commands,
             black.clone(),
             background.clone(),
             &brick.dots[i].with_orignal_dot(orig),
-        );
-    }
+        )
+    });
 }
 
 fn spwan_brick_next(
@@ -204,10 +204,9 @@ fn spwan_brick_at(
         })
         .with_children(|child| {
             let brick: Brick = brick.into();
-            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[0]);
-            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[1]);
-            spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[2]);
-            spwan_child_dot(child, black, background, &brick.dots[3]);
+            (0..4).for_each(|i| {
+                spwan_child_dot(child, black.clone(), background.clone(), &brick.dots[i])
+            });
         });
 }
 

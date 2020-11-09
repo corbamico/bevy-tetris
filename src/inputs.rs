@@ -27,7 +27,7 @@ impl Plugin for KeyboardPlugin {
         app.add_resource(KeyboardTimer(Timer::from_seconds(TIMER_KEY_SECS, true)))
             .add_resource(FallingTimer::default())
             .add_resource(BrickMoveRes(Movements::None))
-            .add_system_to_stage(stage::FIRST, handle_keyboard.system());
+            .add_system_to_stage(stage::PRE_EVENT, handle_keyboard.system());
     }
 }
 
