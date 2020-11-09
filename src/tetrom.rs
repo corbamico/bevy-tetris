@@ -1,15 +1,9 @@
 use crate::bricks::*;
-use crate::consts::{
-    BOARD_BOTTOM_PX, BOARD_LEFT_PX, BOARD_Y_VALIDE, BRICK_START_DOT, DOT_WIDTH_PX,
-    NEXT_BRICK_BOTTOM_PX, NEXT_BRICK_LEFT_PX, SCORE_PER_DROP, STRING_GAME_OVER,
-};
+use crate::consts::*;
 use crate::inputs::{BrickMoveRes, FallingTimer, Movements};
 use crate::screen::Materials;
 use crate::states::{GameData, GameState, GameText};
 use bevy::prelude::*;
-
-pub struct BlackMaterial(Handle<ColorMaterial>);
-pub struct BackgroundMaterial(Handle<ColorMaterial>);
 
 //for Resource
 struct BrickNext {
@@ -46,15 +40,11 @@ impl Plugin for BrickMovingPlugin {
     }
 }
 
-fn setup(mut commands: Commands, mut materials: ResMut<Assets<ColorMaterial>>) {
-    let black = materials.add(Color::rgb_u8(0, 0, 0).into());
-    let background = materials.add(Color::rgb_u8(158, 173, 135).into());
+fn setup(mut commands: Commands) {
     let brick_next = BrickNext::new();
 
     commands
         .insert_resource(Board::default())
-        .insert_resource(BlackMaterial(black))
-        .insert_resource(BackgroundMaterial(background))
         .insert_resource(brick_next);
 
     //We can draw test dot in screen here:
@@ -77,10 +67,7 @@ fn handle_brick_movement(
     mut commands: Commands,
     mut board: ResMut<Board>,
     movement: Res<BrickMoveRes>,
-
-    black: Res<BlackMaterial>,
-    background: Res<BackgroundMaterial>,
-
+    materials: Res<Materials>,
     mut bricks: Query<(Entity, &BrickShape, &mut Dot)>,
 ) {
     match movement.0 {
@@ -96,8 +83,8 @@ fn handle_brick_movement(
                 commands.despawn_recursive(entity);
                 spwan_brick(
                     &mut commands,
-                    black.0.clone(),
-                    background.0.clone(),
+                    materials.black.clone(),
+                    materials.background.clone(),
                     next_shape,
                     &next_dot,
                 );
@@ -110,8 +97,8 @@ fn handle_brick_movement(
                 //despawn brick and spwan dots with components(DotInBoard)
                 spwan_brick_as_dot(
                     &mut commands,
-                    black.0.clone(),
-                    background.0.clone(),
+                    materials.black.clone(),
+                    materials.background.clone(),
                     *brick_shape,
                     &next_dot,
                 );
@@ -380,16 +367,15 @@ fn generate_new_brick(
     mut commands: Commands,
     mut reader: Local<EventReader<NewBrickEvent>>,
     events: Res<Events<NewBrickEvent>>,
-    black: Res<BlackMaterial>,
-    background: Res<BackgroundMaterial>,
+    materials: Res<Materials>,
     mut brick_next: ResMut<BrickNext>,
     query: Query<(Entity, &BrickNextTag)>,
 ) {
     if reader.iter(&events).next().is_some() {
         spwan_brick(
             &mut commands,
-            black.0.clone(),
-            background.0.clone(),
+            materials.black.clone(),
+            materials.background.clone(),
             brick_next.curr,
             &BRICK_START_DOT,
         );
@@ -399,8 +385,8 @@ fn generate_new_brick(
         }
         spwan_brick_next(
             &mut commands,
-            black.0.clone(),
-            background.0.clone(),
+            materials.black.clone(),
+            materials.background.clone(),
             brick_next.curr,
         );
     }
