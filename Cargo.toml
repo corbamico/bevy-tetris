@@ -13,3 +13,15 @@ version = "0.1.0"
 bevy = "0.3"
 lazy_static = "1.4"
 rand = "0.7"
+
+[[example]]
+name = "step1"
+path = "example/step1.rs"
+
+[[example]]
+name = "step2"
+path = "example/step2.rs"
+
+[[example]]
+name = "step3"
+path = "example/step3.rs"
