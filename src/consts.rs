@@ -2,8 +2,8 @@
 use crate::bricks::{Brick, Dot};
 use lazy_static::*;
 
-pub(crate) const WINDOWS_WIDTH: u32 = 360;
-pub(crate) const WINDOWS_HEIGHT: u32 = 443;
+pub(crate) const WINDOWS_WIDTH: f32 = 360.0;
+pub(crate) const WINDOWS_HEIGHT: f32 = 443.0;
 
 pub(crate) const TEXT_SCORE_X: f32 = 248.0;
 pub(crate) const TEXT_SCORE_Y: f32 = 48.0;
@@ -37,7 +37,7 @@ pub(crate) const BRICKS_TYPES: usize = 7;
 pub(crate) const SCORE_PER_DROP: u32 = 10;
 
 pub(crate) const STRING_GAME_START: &str = "PRESS SPACE";
-pub(crate) const STRING_GAME_PLAYING: &str = "";
+pub(crate) const STRING_GAME_PLAYING: &str = "                         ";
 pub(crate) const STRING_GAME_OVER: &str = " GAME OVER \n\nPRESS SPACE";
 
 //delay = 725 * .85 ^ level + level (ms)

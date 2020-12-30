@@ -40,7 +40,7 @@ impl Plugin for BrickMovingPlugin {
     }
 }
 
-fn setup(mut commands: Commands) {
+fn setup(commands: &mut Commands) {
     let brick_next = BrickNext::new();
 
     commands
@@ -51,7 +51,18 @@ fn setup(mut commands: Commands) {
     //spwan_board_dot(&mut commands, black, background, &Dot(9, 0));
 }
 
-fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
+// fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
+//     for (dot, mut style) in &mut q.iter_mut() {
+//         if style.position_type == PositionType::Absolute {
+//             style.position = Rect {
+//                 left: Val::Px(dot_to_screen_x(&dot)),
+//                 bottom: Val::Px(dot_to_screen_y(&dot)),
+//                 ..Default::default()
+//             }
+//         }
+//     }
+// }
+fn translate_coordinate(mut q: Query<(&Dot, &mut Style),Changed<Dot>>) {
     for (dot, mut style) in &mut q.iter_mut() {
         if style.position_type == PositionType::Absolute {
             style.position = Rect {
@@ -64,7 +75,7 @@ fn translate_coordinate(mut q: Query<(Changed<Dot>, &mut Style)>) {
 }
 
 fn handle_brick_movement(
-    mut commands: Commands,
+    mut commands: &mut Commands,
     mut board: ResMut<Board>,
     movement: Res<BrickMoveRes>,
     materials: Res<Materials>,
@@ -190,7 +201,7 @@ fn spwan_brick_at(
     y: f32,
 ) {
     commands
-        .spawn(NodeComponents {
+        .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
@@ -217,7 +228,7 @@ fn spwan_board_dot(
     dot: &Dot,
 ) {
     commands
-        .spawn(NodeComponents {
+        .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
@@ -243,7 +254,7 @@ fn spwan_child_dot(
     dot: &Dot,
 ) {
     commands
-        .spawn(NodeComponents {
+        .spawn(NodeBundle {
             material: black.clone(),
             style: Style {
                 size: Size::new(Val::Px(20.0), Val::Px(20.0)),
@@ -260,7 +271,7 @@ fn spwan_child_dot(
         })
         .with_children(|parent| {
             parent
-                .spawn(NodeComponents {
+                .spawn(NodeBundle {
                     material: background,
                     style: Style {
                         size: Size::new(Val::Px(16.0), Val::Px(16.0)),
@@ -274,7 +285,7 @@ fn spwan_child_dot(
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(NodeComponents {
+                    parent.spawn(NodeBundle {
                         material: black,
                         style: Style {
                             size: Size::new(Val::Px(12.0), Val::Px(12.0)),
@@ -294,7 +305,7 @@ fn spwan_child_dot(
 pub struct NewBrickEvent;
 
 fn check_clean_line(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut board: ResMut<Board>,
     mut game_data: ResMut<GameData>,
     movement: Res<BrickMoveRes>,
@@ -329,7 +340,7 @@ fn check_clean_line(
 }
 
 fn check_game_over(
-    mut commands: Commands,
+    commands: &mut Commands,
     mut event_sender: ResMut<Events<NewBrickEvent>>,
     movement: Res<BrickMoveRes>,
     board: ResMut<Board>,
@@ -363,7 +374,7 @@ fn check_game_over(
 }
 
 fn generate_new_brick(
-    mut commands: Commands,
+    mut commands: &mut Commands,
     mut reader: Local<EventReader<NewBrickEvent>>,
     events: Res<Events<NewBrickEvent>>,
     materials: Res<Materials>,

@@ -42,8 +42,8 @@ fn handle_keyboard(
     board: Res<Board>,
     bricks: Query<(&BrickShape, &Dot)>,
 ) {
-    keyboard_timer.0.tick(time.delta_seconds);
-    falling_timer.0.tick(time.delta_seconds);
+    keyboard_timer.0.tick(time.delta_seconds());
+    falling_timer.0.tick(time.delta_seconds());
 
     movement.0 = Movements::None;
     let mut falling_dot = Dot(0, 0);
@@ -72,7 +72,7 @@ fn handle_keyboard(
             }
         }
     }
-    if falling_timer.0.finished {
+    if falling_timer.0.finished() {
         for (brick_shape, dot) in &mut bricks.iter() {
             let next_position = dot.down();
             //BUG: initial brick out of Y
@@ -85,7 +85,7 @@ fn handle_keyboard(
             }
         }
     }
-    if keyboard_timer.0.finished {
+    if keyboard_timer.0.finished() {
         for (brick_shape, dot) in &mut bricks.iter() {
             if keyboard.pressed(KeyCode::Right) {
                 let next_dot = dot.right().with_orignal_dot(&falling_dot);

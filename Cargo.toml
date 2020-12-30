@@ -10,7 +10,7 @@ version = "0.1.0"
 #complie sucess with
 #bevy = "0.3.0"
 
-bevy = "0.3"
+bevy = "0.4"
 lazy_static = "1.4"
 rand = "0.7"
 

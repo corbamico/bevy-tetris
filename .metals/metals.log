@@ -1,0 +1,4 @@
+2020.12.09 10:00:31 INFO  Started: Metals version 0.9.7 in workspace 'C:\Project\github\bevy-tetris' for client vscode.
+2020.12.09 10:00:34 INFO  time: initialize in 2.82s
+2020.12.09 10:00:35 WARN  Build server is not auto-connectable.
+2020.12.09 10:00:35 WARN  no build tool detected in workspace 'C:\Project\github\bevy-tetris'. The most common cause for this problem is that the editor was opened in the wrong working directory, for example if you use sbt then the workspace directory should contain build.sbt. 

@@ -9,8 +9,8 @@ fn main() {
         //we initial windows size here:
         .add_resource(WindowDescriptor {
             title: "Tetris".to_string(),
-            width: 360,
-            height: 443,
+            width: 360.0,
+            height: 443.0,
             ..Default::default()
         })
         .add_startup_system(setup.system())
@@ -18,19 +18,19 @@ fn main() {
         .run();
 }
 fn setup(
-    mut commands: Commands,
+    mut commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let start_handle = asset_server.load("screen.png");
 
     commands
-        .spawn(Camera2dComponents::default())
-        .spawn(SpriteComponents {
+        .spawn(Camera2dBundle::default())
+        .spawn(SpriteBundle {
             material: materials.add(start_handle.into()),
             ..Default::default()
         });
-    commands.spawn(UiCameraComponents::default());
+    commands.spawn(CameraUiBundle::default());
 
     let black = materials.add(Color::rgb_u8(0, 0, 0).into());
     let background = materials.add(Color::rgb_u8(158, 173, 135).into());
@@ -50,7 +50,7 @@ fn spwan_brick_at(
     y: f32,
 ) {
     commands
-        .spawn(NodeComponents {
+        .spawn(NodeBundle {
             style: Style {
                 position_type: PositionType::Absolute,
                 position: Rect {
@@ -76,7 +76,7 @@ fn spwan_child_dot(
     dot: &Dot,
 ) {
     commands
-        .spawn(NodeComponents {
+        .spawn(NodeBundle {
             material: black.clone(),
             style: Style {
                 size: Size::new(Val::Px(20.0), Val::Px(20.0)),
@@ -93,7 +93,7 @@ fn spwan_child_dot(
         })
         .with_children(|parent| {
             parent
-                .spawn(NodeComponents {
+                .spawn(NodeBundle {
                     material: background,
                     style: Style {
                         size: Size::new(Val::Px(16.0), Val::Px(16.0)),
@@ -107,7 +107,7 @@ fn spwan_child_dot(
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    parent.spawn(NodeComponents {
+                    parent.spawn(NodeBundle {
                         material: black,
                         style: Style {
                             size: Size::new(Val::Px(12.0), Val::Px(12.0)),

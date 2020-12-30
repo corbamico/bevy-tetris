@@ -17,15 +17,16 @@ impl Plugin for ScreenPlugin {
 }
 
 fn setup(
-    mut commands: Commands,
+    commands: &mut Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
     let start_handle = asset_server.load("screen.png");
     commands
         .insert_resource(Materials::new(asset_server, &mut materials))
-        .spawn(Camera2dComponents::default())
-        .spawn(SpriteComponents {
+        // .spawn(Camera2dComponents::default())
+        .spawn(Camera2dBundle::default())
+        .spawn(SpriteBundle {
             material: materials.add(start_handle.into()),
             ..Default::default()
         })

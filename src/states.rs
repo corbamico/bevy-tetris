@@ -56,13 +56,14 @@ impl Plugin for GameScorePlugin {
         app.add_startup_system(setup.system())
             .add_resource(GameData::default())
             .add_system_to_stage(stage::UPDATE, handle_game_data.system())
-            .add_system_to_stage(stage::POST_UPDATE, handle_game_state.system())
+            .add_system_to_stage(stage::UPDATE, handle_game_state.system())
             .add_system_to_stage(stage::POST_UPDATE, handle_game_data.system());
     }
 }
 
-fn setup(mut commands: Commands, materials: Res<Materials>) {
-    commands.spawn(UiCameraComponents::default());
+fn setup(mut commands: &mut Commands, materials: Res<Materials>) {
+    // commands.spawn(UiCameraComponents::default());
+    commands.spawn(CameraUiBundle::default());
     spwan_text(
         &mut commands,
         materials.font.clone(),
@@ -98,6 +99,7 @@ fn setup(mut commands: Commands, materials: Res<Materials>) {
 }
 
 fn handle_game_data(
+    //_commands: &mut Commands,
     game_data: ChangedRes<GameData>,
     mut score: Query<(&ScoreText, &mut Text)>,
     mut lines: Query<(&LinesText, &mut Text)>,
@@ -123,13 +125,14 @@ fn spwan_text(
     component: impl Component,
 ) {
     commands
-        .spawn(TextComponents {
+        .spawn(TextBundle {
             text: Text {
                 value: s.to_string(),
                 font: font_handle,
                 style: TextStyle {
                     font_size: 16.0,
                     color: Color::BLACK,
+                    ..Default::default()
                 },
             },
             style: Style {
@@ -148,7 +151,7 @@ fn spwan_text(
 }
 
 fn handle_game_state(
-    mut commands: Commands,
+    commands: &mut Commands,
     //_game_data: ChangedRes<GameData>,
     mut game_data: ResMut<GameData>,
     mut board: ResMut<Board>,
@@ -180,6 +183,7 @@ fn handle_game_state(
 
                 event_sender.send(NewBrickEvent);
                 game_data.game_state = GameState::Playing;
+
                 for (_, mut text) in &mut query.iter_mut() {
                     text.value = STRING_GAME_PLAYING.to_string();
                 }
