@@ -54,7 +54,7 @@ impl<'a> Into<&'a Brick> for &'a BrickShape {
 
 impl BrickShape {
     pub fn rand() -> Self {
-        let index = rand::thread_rng().gen_range(0, BRICKS_TYPES);
+        let index = rand::thread_rng().gen_range(0..BRICKS_TYPES);
         Self(index, 0)
     }
     pub fn rotate(&self) -> Self {
@@ -143,11 +143,13 @@ impl Board {
         }
         vec
     }
-    pub fn clean_lines(&mut self) {
+    pub fn clean_lines(&mut self) -> u32 {
         let deleted_lines = self.get_clean_lines();
+        let result = deleted_lines.len();
         for line in deleted_lines {
             self.clean_line(line);
         }
+        result as u32
     }
 
     pub fn clean_line(&mut self, y: i8) {

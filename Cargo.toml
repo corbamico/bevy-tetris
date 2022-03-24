@@ -1,27 +1,21 @@
 [package]
 authors = ["corbamico <corbamico@163.com>"]
-edition = "2018"
+edition = "2021"
 name = "bevy-tetris"
-version = "0.1.0"
+version = "0.6.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-#complie sucess with
-#bevy = "0.3.0"
-
-bevy = "0.4"
+bevy = "0.6.1"
+bevy_utils = "0.6"
 lazy_static = "1.4"
-rand = "0.7"
+rand = "0.8"
 
-[[example]]
-name = "step1"
-path = "example/step1.rs"
+# Enable only a small amount of optimization in debug mode
+[profile.dev]
+opt-level = 1
 
-[[example]]
-name = "step2"
-path = "example/step2.rs"
-
-[[example]]
-name = "step3"
-path = "example/step3.rs"
+# Enable high optimizations for dependencies (incl. Bevy), but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
