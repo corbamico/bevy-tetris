@@ -38,8 +38,8 @@ pub(crate) const BRICKS_TYPES: usize = 7;
 
 pub(crate) const SCORE_PER_DROP: u32 = 10;
 
-pub(crate) const STRING_GAME_START: &str = "PRESS SPACE";
-pub(crate) const STRING_GAME_PLAYING: &str = "                         ";
+// pub(crate) const STRING_GAME_START: &str = "PRESS SPACE";
+// pub(crate) const STRING_GAME_PLAYING: &str = "                         ";
 pub(crate) const STRING_GAME_OVER: &str = " GAME OVER \n\nPRESS SPACE";
 
 //delay = 725 * .85 ^ level + level (ms)

@@ -167,9 +167,9 @@ impl Board {
             .iter_mut()
             .for_each(|x| *x = false);
     }
-    pub fn game_over(&self) -> bool {
-        self.0[Self::index(&Dot(0, BOARD_Y_VALIDE))..]
-            .iter()
-            .any(|x| *x)
-    }
+    // pub fn game_over(&self) -> bool {
+    //     self.0[Self::index(&Dot(0, BOARD_Y_VALIDE))..]
+    //         .iter()
+    //         .any(|x| *x)
+    // }
 }

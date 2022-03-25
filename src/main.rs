@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 //#![windows_subsystem = "windows"]
 mod bricks;
 mod consts;
@@ -34,7 +33,7 @@ fn main() {
         .add_startup_system_to_stage(StartupStage::PreStartup, setup_screen)
         .add_state(GameState::Playing)
         .add_plugins(DefaultPlugins)
-        .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(setup_gui))
+        .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(newgame_system))
         .add_system_set(
             SystemSet::on_update(GameState::Playing)
                 .with_system(keyboard_system)
@@ -42,6 +41,8 @@ fn main() {
                 .with_system(freezebrick_system)
                 .with_system(scoreboard_system),
         )
+        .add_system_set(SystemSet::on_enter(GameState::GameOver).with_system(gameover_setup))
+        .add_system_set(SystemSet::on_update(GameState::GameOver).with_system(gameover_system))
         .run();
 }
 
@@ -52,6 +53,25 @@ fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         texture: asset_server.load("screen.png"),
         ..default()
     });
+    commands
+        .spawn_bundle(init_text(
+            "000000",
+            TEXT_SCORE_X,
+            TEXT_SCORE_Y,
+            &asset_server,
+        ))
+        .insert(ScoreText);
+    commands
+        .spawn_bundle(init_text(
+            "000000",
+            TEXT_LINES_X,
+            TEXT_LINES_Y,
+            &asset_server,
+        ))
+        .insert(LinesText);
+    commands
+        .spawn_bundle(init_text("00", TEXT_LEVEL_X, TEXT_LEVEL_Y, &asset_server))
+        .insert(LevelText);
 }
 
 #[derive(Component)]
@@ -73,6 +93,8 @@ struct LinesText;
 
 #[derive(Component)]
 struct LevelText;
+#[derive(Component)]
+struct GameOverText;
 
 /// keyboard_system only handle keyboard input
 /// dont handle tick-tick falling
@@ -83,8 +105,9 @@ fn keyboard_system(
     time: Res<Time>,
     mut query: Query<(Entity, &mut Transform), With<BrickBoardBundle>>,
 ) {
+    let ticked = game.keyboard_timer.tick(time.delta()).finished();
     if let Ok((moving_entity, mut transform)) = query.get_single_mut() {
-        if game.keyboard_timer.tick(time.delta()).finished() {
+        if ticked {
             if keyboard_input.pressed(KeyCode::Left) {
                 if game
                     .board
@@ -111,14 +134,14 @@ fn keyboard_system(
                     commands.entity(moving_entity).despawn_recursive();
                 }
             }
-            if keyboard_input.pressed(KeyCode::Down) {
+            if keyboard_input.pressed(KeyCode::Space) {
                 while game
                     .board
                     .valid_brickshape(&game.moving_brick, &game.moving_orig.down())
                 {
                     game.moving_orig.move_down();
                     transform.translation.y -= consts::DOT_WIDTH_PX;
-                }                
+                }
             }
         }
     }
@@ -132,8 +155,9 @@ fn movebrick_systrem(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<BrickBoardBundle>>,
 ) {
+    let ticked = game.falling_timer.tick(time.delta()).finished();
     if let Ok(mut transform) = query.get_single_mut() {
-        if game.falling_timer.tick(time.delta()).finished() {
+        if ticked {
             if game
                 .board
                 .valid_brickshape(&game.moving_brick, &game.moving_orig.down())
@@ -157,7 +181,6 @@ fn movebrick_systrem(
 fn freezebrick_system(
     mut commands: Commands,
     mut game: ResMut<GameData>,
-    mut query: Query<Entity, With<BrickNextBundle>>,
     mut brick: Query<Entity, With<BrickBoardBundle>>,
     mut board: Query<Entity, With<BoardBundle>>,
 ) {
@@ -175,32 +198,14 @@ fn freezebrick_system(
         }
         //redraw board
         spawn_board(&mut commands, &game.board);
-
-        //step 2. generate new brick(using next_brick, and rand generate new next_brick)
-        game.freeze = false;
-
-        game.moving_orig = consts::BRICK_START_DOT;
-        game.moving_brick = game.next_brick;
-        game.next_brick = BrickShape::rand();
-
-        //step 2.2 destory next_brick
-        if let Ok(entity) = query.get_single_mut() {
-            commands.entity(entity).despawn_recursive();
-        }
-
-        //step 3.1 draw new one in start point
-        spawn_brick_board(
-            &mut commands,
-            game.moving_brick.into(),
-            consts::BRICK_START_DOT,
-        );
-        //step 3.3 draw new next_brick
-        spawn_brick_next(&mut commands, game.next_brick.into());
     }
 }
 
 fn scoreboard_system(
+    mut commands: Commands,
+    mut state: ResMut<State<GameState>>,
     mut game: ResMut<GameData>,
+    mut next_brick: Query<Entity, With<BrickNextBundle>>,
     mut query: QuerySet<(
         QueryState<&mut Text, With<ScoreText>>,
         QueryState<&mut Text, With<LinesText>>,
@@ -210,14 +215,14 @@ fn scoreboard_system(
     if game.deleted_lines > 0 {
         game.score += get_score(game.level, game.deleted_lines);
         game.lines += game.deleted_lines;
+        game.deleted_lines = 0;
+
         let level = get_level(game.lines);
         if game.level != level {
             game.level = level;
-            game.falling_timer.set_duration(Duration::from_secs_f32(get_speed(level)));
+            game.falling_timer
+                .set_duration(Duration::from_secs_f32(get_speed(level)));
         }
-
-        game.deleted_lines = 0;        
-
         if let Ok(mut text) = query.q0().get_single_mut() {
             text.sections[0].value = format!("{:06}", game.score);
         }
@@ -228,33 +233,109 @@ fn scoreboard_system(
             text.sections[0].value = format!("{:02}", game.level);
         }
     }
+
+    //next moving brick
+    //step 1. generate new brick(using next_brick, and rand generate new next_brick)
+    //game.freeze = false;
+    if game.freeze {
+        game.freeze = false;
+        game.score += SCORE_PER_DROP;
+        if let Ok(mut text) = query.q0().get_single_mut() {
+            text.sections[0].value = format!("{:06}", game.score);
+        }
+
+        game.moving_orig = consts::BRICK_START_DOT;
+        game.moving_brick = game.next_brick;
+        game.next_brick = BrickShape::rand();
+
+        if game
+            .board
+            .valid_brickshape(&game.moving_brick, &BRICK_START_DOT)
+        {
+            //step 2.2 destory next_brick
+            if let Ok(entity) = next_brick.get_single_mut() {
+                commands.entity(entity).despawn_recursive();
+            }
+
+            //step 3.1 draw new one in start point
+            spawn_brick_board(
+                &mut commands,
+                game.moving_brick.into(),
+                consts::BRICK_START_DOT,
+            );
+            //step 3.3 draw new next_brick
+            spawn_brick_next(&mut commands, game.next_brick.into());
+        } else {
+            //game over!
+            let _ = state.set(GameState::GameOver);
+        }
+    }
 }
 
-fn setup_gui(mut commands: Commands, asset_server: Res<AssetServer>, game: ResMut<GameData>) {
+fn gameover_setup(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    mut board: Query<Entity, With<BoardBundle>>,
+    mut next_brick: Query<Entity, With<BrickNextBundle>>,
+) {
+    //destory board
+    if let Ok(entity) = board.get_single_mut() {
+        commands.entity(entity).despawn_recursive();
+    }
+    //destory next brick
+    if let Ok(entity) = next_brick.get_single_mut() {
+        commands.entity(entity).despawn_recursive();
+    }
+    //show GameOver
     commands
         .spawn_bundle(init_text(
-            "000000",
-            TEXT_SCORE_X,
-            TEXT_SCORE_Y,
+            STRING_GAME_OVER,
+            TEXT_GAME_X,
+            TEXT_GAME_Y,
             &asset_server,
         ))
-        .insert(ScoreText);
-    commands
-        .spawn_bundle(init_text(
-            "000000",
-            TEXT_LINES_X,
-            TEXT_LINES_Y,
-            &asset_server,
-        ))
-        .insert(LinesText);
-    commands
-        .spawn_bundle(init_text("00", TEXT_LEVEL_X, TEXT_LEVEL_Y, &asset_server))
-        .insert(LevelText);
+        .insert(GameOverText);
+}
+fn gameover_system(
+    mut commands: Commands,
+    mut state: ResMut<State<GameState>>,
+    mut game: ResMut<GameData>,
+    mut gameover: Query<Entity, With<GameOverText>>,
+    keyboard_input: Res<Input<KeyCode>>,
+) {
+    if keyboard_input.pressed(KeyCode::Space) {
+        game.reset();
 
+        if let Ok(entity) = gameover.get_single_mut() {
+            commands.entity(entity).despawn_recursive();
+        }
+        let _ = state.set(GameState::Playing);
+    }
+}
+
+fn newgame_system(
+    mut commands: Commands,
+    game: ResMut<GameData>,
+    mut query: QuerySet<(
+        QueryState<&mut Text, With<ScoreText>>,
+        QueryState<&mut Text, With<LinesText>>,
+        QueryState<&mut Text, With<LevelText>>,
+    )>,
+) {
     let moving_brick = game.moving_brick;
     let next_brick = game.next_brick;
     spawn_brick_board(&mut commands, moving_brick.into(), BRICK_START_DOT);
     spawn_brick_next(&mut commands, next_brick.into());
+
+    if let Ok(mut text) = query.q0().get_single_mut() {
+        text.sections[0].value = format!("{:06}", game.score);
+    }
+    if let Ok(mut text) = query.q1().get_single_mut() {
+        text.sections[0].value = format!("{:06}", game.lines);
+    }
+    if let Ok(mut text) = query.q2().get_single_mut() {
+        text.sections[0].value = format!("{:02}", game.level);
+    }
 }
 
 fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
@@ -263,7 +344,7 @@ fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
             transform: Transform::from_xyz(
                 consts::NEXT_BRICK_LEFT_PX - consts::WINDOWS_WIDTH / 2.0,
                 consts::NEXT_BRICK_BOTTOM_PX - consts::WINDOWS_HEIGHT / 2.0,
-                0.1,
+                0.0,
             ),
             ..default()
         })
@@ -382,6 +463,18 @@ pub struct GameData {
     falling_timer: Timer,
 }
 
+impl GameData {
+    fn reset(&mut self) {
+        self.board.clear();
+        self.freeze = false;
+        self.deleted_lines = 0;
+        self.score = 0;
+        self.lines = 0;
+        self.level = 0;
+        self.keyboard_timer = Timer::from_seconds(consts::TIMER_KEY_SECS, true);
+        self.falling_timer = Timer::from_seconds(consts::TIMER_FALLING_SECS, true);
+    }
+}
 impl Default for GameData {
     fn default() -> Self {
         Self {
