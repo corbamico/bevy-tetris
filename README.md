@@ -21,6 +21,10 @@ bevy-tetris clone tetris game using rust/bevy
 
 ![screen](./docs/screen.png)
 
+## Try here
+
+ [WASM GAME Here](https://corbamico.github.io/bevy-tetris/)
+
 ## Thanks
 
 inspired by [flappy_bevy](https://github.com/TanTanDev/flappy_bevy) and [bevy-snake](https://mbuffett.com/posts/bevy-snake-tutorial/)
