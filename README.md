@@ -21,9 +21,9 @@ bevy-tetris clone tetris game using rust/bevy
 
 ![screen](./docs/screen.png)
 
-## Try here
+## Try Online here
 
- [WASM GAME Here](https://corbamico.github.io/bevy-tetris/)
+ [WASM GAME Online Here](https://corbamico.github.io/bevy-tetris/)
 
 ## Thanks
 
