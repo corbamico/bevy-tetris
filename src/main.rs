@@ -7,12 +7,13 @@ use bevy_utils::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
 
+///default() valid in bevy 0.7, comment those
 ///copy from, which is not included in bevy 0.6.1
 ///https://github.com/bevyengine/bevy/blob/main/crates/bevy_utils/src/default.rs
-#[inline]
-pub fn default<T: Default>() -> T {
-    std::default::Default::default()
-}
+// #[inline]
+// pub fn default<T: Default>() -> T {
+//     std::default::Default::default()
+// }
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash)]
 enum GameState {
@@ -108,24 +109,24 @@ fn keyboard_system(
     let ticked = game.keyboard_timer.tick(time.delta()).finished();
     if let Ok((moving_entity, mut transform)) = query.get_single_mut() {
         if ticked {
-            if keyboard_input.pressed(KeyCode::Left) {
-                if game
+            if keyboard_input.pressed(KeyCode::Left)
+                && game
                     .board
                     .valid_brickshape(&game.moving_brick, &game.moving_orig.left())
-                {
-                    game.moving_orig.move_left();
-                    transform.translation.x -= consts::DOT_WIDTH_PX;
-                }
+            {
+                game.moving_orig.move_left();
+                transform.translation.x -= consts::DOT_WIDTH_PX;
             }
-            if keyboard_input.pressed(KeyCode::Right) {
-                if game
+
+            if keyboard_input.pressed(KeyCode::Right)
+                && game
                     .board
                     .valid_brickshape(&game.moving_brick, &game.moving_orig.right())
-                {
-                    game.moving_orig.move_right();
-                    transform.translation.x += consts::DOT_WIDTH_PX;
-                }
+            {
+                game.moving_orig.move_right();
+                transform.translation.x += consts::DOT_WIDTH_PX;
             }
+
             if keyboard_input.pressed(KeyCode::Up) {
                 let rotated = game.moving_brick.rotate();
                 if game.board.valid_brickshape(&rotated, &game.moving_orig) {
@@ -206,10 +207,10 @@ fn scoreboard_system(
     mut state: ResMut<State<GameState>>,
     mut game: ResMut<GameData>,
     mut next_brick: Query<Entity, With<BrickNextBundle>>,
-    mut query: QuerySet<(
-        QueryState<&mut Text, With<ScoreText>>,
-        QueryState<&mut Text, With<LinesText>>,
-        QueryState<&mut Text, With<LevelText>>,
+    mut query: ParamSet<(
+        Query<&mut Text, With<ScoreText>>,
+        Query<&mut Text, With<LinesText>>,
+        Query<&mut Text, With<LevelText>>,
     )>,
 ) {
     if game.deleted_lines > 0 {
@@ -223,13 +224,13 @@ fn scoreboard_system(
             game.falling_timer
                 .set_duration(Duration::from_secs_f32(get_speed(level)));
         }
-        if let Ok(mut text) = query.q0().get_single_mut() {
+        if let Ok(mut text) = query.p0().get_single_mut() {
             text.sections[0].value = format!("{:06}", game.score);
         }
-        if let Ok(mut text) = query.q1().get_single_mut() {
+        if let Ok(mut text) = query.p1().get_single_mut() {
             text.sections[0].value = format!("{:06}", game.lines);
         }
-        if let Ok(mut text) = query.q2().get_single_mut() {
+        if let Ok(mut text) = query.p2().get_single_mut() {
             text.sections[0].value = format!("{:02}", game.level);
         }
     }
@@ -240,7 +241,7 @@ fn scoreboard_system(
     if game.freeze {
         game.freeze = false;
         game.score += SCORE_PER_DROP;
-        if let Ok(mut text) = query.q0().get_single_mut() {
+        if let Ok(mut text) = query.p0().get_single_mut() {
             text.sections[0].value = format!("{:06}", game.score);
         }
 
@@ -316,10 +317,10 @@ fn gameover_system(
 fn newgame_system(
     mut commands: Commands,
     game: ResMut<GameData>,
-    mut query: QuerySet<(
-        QueryState<&mut Text, With<ScoreText>>,
-        QueryState<&mut Text, With<LinesText>>,
-        QueryState<&mut Text, With<LevelText>>,
+    mut query: ParamSet<(
+        Query<&mut Text, With<ScoreText>>,
+        Query<&mut Text, With<LinesText>>,
+        Query<&mut Text, With<LevelText>>,
     )>,
 ) {
     let moving_brick = game.moving_brick;
@@ -327,13 +328,13 @@ fn newgame_system(
     spawn_brick_board(&mut commands, moving_brick.into(), BRICK_START_DOT);
     spawn_brick_next(&mut commands, next_brick.into());
 
-    if let Ok(mut text) = query.q0().get_single_mut() {
+    if let Ok(mut text) = query.p0().get_single_mut() {
         text.sections[0].value = format!("{:06}", game.score);
     }
-    if let Ok(mut text) = query.q1().get_single_mut() {
+    if let Ok(mut text) = query.p1().get_single_mut() {
         text.sections[0].value = format!("{:06}", game.lines);
     }
-    if let Ok(mut text) = query.q2().get_single_mut() {
+    if let Ok(mut text) = query.p2().get_single_mut() {
         text.sections[0].value = format!("{:02}", game.level);
     }
 }
@@ -416,7 +417,7 @@ fn sprit_bundle(width: f32, color: Color, trans: Vec2) -> SpriteBundle {
             ..default()
         },
         sprite: Sprite {
-            color: color,
+            color,
             custom_size: Some(Vec2::new(width, width)),
             ..default()
         },
@@ -503,7 +504,7 @@ fn dot_to_vec2(dot: &Dot) -> Vec2 {
 ///use formula from dwhacks, http://gist.github.com/dwhacks/8644250
 #[inline]
 pub fn get_speed(level: u32) -> f32 {
-    consts::TIMER_FALLING_SECS * (0.85 as f32).powi(level as i32) + level as f32 / 1000.0
+    consts::TIMER_FALLING_SECS * (0.85_f32).powi(level as i32) + level as f32 / 1000.0
 }
 
 ///tetris scoring  

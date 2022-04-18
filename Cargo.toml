@@ -2,13 +2,13 @@
 authors = ["corbamico <corbamico@163.com>"]
 edition = "2021"
 name = "bevy-tetris"
-version = "0.6.0"
+version = "0.7.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.6.1"
-bevy_utils = "0.6"
+bevy = "0.7"
+bevy_utils = "0.7"
 lazy_static = "1.4"
 rand = "0.8"
 

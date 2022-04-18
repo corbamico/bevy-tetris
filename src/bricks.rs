@@ -25,9 +25,6 @@ impl Dot {
     pub fn down(&self) -> Self {
         Self(self.0, self.1 - 1)
     }
-    pub fn up(&self) -> Self {
-        Self(self.0, self.1 + 1)
-    }
 }
 
 #[derive(Copy, Clone)]
@@ -38,17 +35,9 @@ pub struct Brick {
 #[derive(Copy, Clone)]
 pub struct BrickShape(pub usize, pub usize);
 
-impl Into<Brick> for BrickShape {
-    fn into(self) -> Brick {
-        BRICKS_DICT[self.0][self.1]
-    }
-}
-
-//BUG?
-//&brickshape dont have same lifecycle of BRICKS_DICT
-impl<'a> Into<&'a Brick> for &'a BrickShape {
-    fn into(self) -> &'a Brick {
-        &BRICKS_DICT[self.0][self.1]
+impl From<BrickShape> for Brick{
+    fn from(bs:BrickShape)->Brick{
+        BRICKS_DICT[bs.0][bs.1]
     }
 }
 
@@ -88,7 +77,8 @@ impl Board {
     }
 
     pub fn occupy_brickshape(&mut self, brick_shape: &BrickShape, orig: &Dot) {
-        self.occupy_brick(brick_shape.into(), orig)
+        let brick = Brick::from(*brick_shape);
+        self.occupy_brick(&brick,orig)
     }
 
     pub fn occupied_dot(&self, dot: &Dot) -> bool {

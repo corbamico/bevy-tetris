@@ -1,4 +1,4 @@
-//#![allow(dead_code)]
+
 use crate::bricks::{Brick, Dot};
 use crate::{Color};
 use lazy_static::*;
