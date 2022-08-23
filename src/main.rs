@@ -1,4 +1,4 @@
-//#![windows_subsystem = "windows"]
+#![windows_subsystem = "windows"]
 mod bricks;
 mod consts;
 
@@ -48,8 +48,8 @@ fn main() {
 }
 
 fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
-    commands.spawn_bundle(UiCameraBundle::default());
+    commands.spawn_bundle(Camera2dBundle::default());
+    //commands.spawn_bundle(UiCameraBundle::default());
     commands.spawn_bundle(SpriteBundle {
         texture: asset_server.load("screen.png"),
         ..default()
@@ -428,19 +428,19 @@ fn sprit_bundle(width: f32, color: Color, trans: Vec2) -> SpriteBundle {
 fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> TextBundle {
     // scoreboard
     TextBundle {
-        text: Text::with_section(
+        text: Text::from_section(
             msg,
             TextStyle {
                 font: asset_server.load("digital7mono.ttf"),
                 font_size: 16.0,
                 color: Color::BLACK,
-            },
-            Default::default(),
+            }
+            //Default::default(),
         ),
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: Rect {
+            position: UiRect {
                 left: Val::Px(x),
                 top: Val::Px(y),
                 ..default()
