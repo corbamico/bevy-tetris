@@ -1,4 +1,5 @@
 use crate::consts::{BOARD_X, BOARD_X_Y, BOARD_Y, BOARD_Y_VALIDE, BRICKS_DICT, BRICKS_TYPES};
+use bevy::prelude::Resource;
 use rand::prelude::*;
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Dot(pub i8, pub i8);
@@ -32,7 +33,7 @@ pub struct Brick {
     pub dots: [Dot; 4],
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Resource)]
 pub struct BrickShape(pub usize, pub usize);
 
 impl From<BrickShape> for Brick{

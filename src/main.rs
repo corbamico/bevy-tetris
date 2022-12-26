@@ -23,17 +23,27 @@ enum GameState {
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
-            title: "tetris".to_string(),
-            height: 443.,
-            width: 360.,
-            resizable: false,
+        // .insert_resource(WindowDescriptor {
+        //     title: "tetris".to_string(),
+        //     height: 443.,
+        //     width: 360.,
+        //     resizable: false,
+        //     ..default()
+        // })
+        .add_plugins(DefaultPlugins.set(WindowPlugin {
+            window: WindowDescriptor {
+                title: "tetris".to_string(),
+                width: 360.,                          
+                height: 443.,               
+                resizable: false,
+              ..default()
+            },
             ..default()
-        })
+          }))
         .insert_resource(GameData::default())
         .add_startup_system_to_stage(StartupStage::PreStartup, setup_screen)
         .add_state(GameState::Playing)
-        .add_plugins(DefaultPlugins)
+        //.add_plugins(DefaultPlugins)
         .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(newgame_system))
         .add_system_set(
             SystemSet::on_update(GameState::Playing)
@@ -48,14 +58,13 @@ fn main() {
 }
 
 fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn_bundle(Camera2dBundle::default());
-    //commands.spawn_bundle(UiCameraBundle::default());
-    commands.spawn_bundle(SpriteBundle {
+    commands.spawn(Camera2dBundle::default());
+    commands.spawn(SpriteBundle {
         texture: asset_server.load("screen.png"),
         ..default()
     });
     commands
-        .spawn_bundle(init_text(
+        .spawn(init_text(
             "000000",
             TEXT_SCORE_X,
             TEXT_SCORE_Y,
@@ -63,7 +72,7 @@ fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .insert(ScoreText);
     commands
-        .spawn_bundle(init_text(
+        .spawn(init_text(
             "000000",
             TEXT_LINES_X,
             TEXT_LINES_Y,
@@ -71,7 +80,7 @@ fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         ))
         .insert(LinesText);
     commands
-        .spawn_bundle(init_text("00", TEXT_LEVEL_X, TEXT_LEVEL_Y, &asset_server))
+        .spawn(init_text("00", TEXT_LEVEL_X, TEXT_LEVEL_Y, &asset_server))
         .insert(LevelText);
 }
 
@@ -289,7 +298,7 @@ fn gameover_setup(
     }
     //show GameOver
     commands
-        .spawn_bundle(init_text(
+        .spawn(init_text(
             STRING_GAME_OVER,
             TEXT_GAME_X,
             TEXT_GAME_Y,
@@ -341,7 +350,7 @@ fn newgame_system(
 
 fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             transform: Transform::from_xyz(
                 consts::NEXT_BRICK_LEFT_PX - consts::WINDOWS_WIDTH / 2.0,
                 consts::NEXT_BRICK_BOTTOM_PX - consts::WINDOWS_HEIGHT / 2.0,
@@ -359,7 +368,7 @@ fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
 
 fn spawn_board(commands: &mut Commands, board: &Board) {
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             //from middle pixel to pixel of (left,bottom)
             transform: Transform::from_xyz(
                 10.0 - consts::WINDOWS_WIDTH / 2.0 + consts::BOARD_LEFT_PX,
@@ -379,7 +388,7 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
 
 fn spawn_brick_board(commands: &mut Commands, brick: Brick, dot_in_board: Dot) {
     commands
-        .spawn_bundle(SpriteBundle {
+        .spawn(SpriteBundle {
             //from middle pixel to pixel of (left,bottom)
             transform: Transform::from_xyz(
                 dot_in_board.0 as f32 * consts::DOT_WIDTH_PX + 10.0 - consts::WINDOWS_WIDTH / 2.0
@@ -399,12 +408,12 @@ fn spawn_brick_board(commands: &mut Commands, brick: Brick, dot_in_board: Dot) {
 }
 fn spawn_dot_as_child(commands: &mut ChildBuilder, trans: Vec2) {
     commands
-        .spawn_bundle(sprit_bundle(20., Color::BLACK, trans))
+        .spawn(sprit_bundle(20., Color::BLACK, trans))
         .with_children(|parent| {
             parent
-                .spawn_bundle(sprit_bundle(16., consts::BACKGROUND, Vec2::default()))
+                .spawn(sprit_bundle(16., consts::BACKGROUND, Vec2::default()))
                 .with_children(|parent| {
-                    parent.spawn_bundle(sprit_bundle(12., Color::BLACK, Vec2::default()));
+                    parent.spawn(sprit_bundle(12., Color::BLACK, Vec2::default()));
                 });
         });
 }
@@ -450,6 +459,9 @@ fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> Text
         ..default()
     }
 }
+
+
+#[derive(Resource)]
 pub struct GameData {
     board: Board,
     moving_brick: BrickShape,
@@ -472,8 +484,8 @@ impl GameData {
         self.score = 0;
         self.lines = 0;
         self.level = 0;
-        self.keyboard_timer = Timer::from_seconds(consts::TIMER_KEY_SECS, true);
-        self.falling_timer = Timer::from_seconds(consts::TIMER_FALLING_SECS, true);
+        self.keyboard_timer = Timer::from_seconds(consts::TIMER_KEY_SECS, TimerMode::Repeating);
+        self.falling_timer = Timer::from_seconds(consts::TIMER_FALLING_SECS, TimerMode::Repeating);
     }
 }
 impl Default for GameData {
@@ -484,8 +496,8 @@ impl Default for GameData {
             moving_orig: consts::BRICK_START_DOT,
             next_brick: BrickShape::rand(),
             freeze: false,
-            keyboard_timer: Timer::from_seconds(consts::TIMER_KEY_SECS, true),
-            falling_timer: Timer::from_seconds(consts::TIMER_FALLING_SECS, true),
+            keyboard_timer: Timer::from_seconds(consts::TIMER_KEY_SECS, TimerMode::Repeating),
+            falling_timer: Timer::from_seconds(consts::TIMER_FALLING_SECS, TimerMode::Repeating),
             deleted_lines: 0,
             score: 0,
             lines: 0,
