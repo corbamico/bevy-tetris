@@ -9,7 +9,11 @@ apt-get install -y \
   zsh \
   vim \
   build-essential \
-  openssl
+  openssl \
+  pkg-config \
+  libasound2-dev \
+  libudev-dev \
+  alsa
 
 ## Install rustup and common components
 curl https://sh.rustup.rs -sSf | sh -s -- -y 
