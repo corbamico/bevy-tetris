@@ -2,58 +2,43 @@
 mod bricks;
 mod consts;
 
-use bevy::{ecs::schedule::SystemSet, prelude::*};
+use bevy::prelude::*;
 use bevy_utils::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
 
-///default() valid in bevy 0.7, comment those
-///copy from, which is not included in bevy 0.6.1
-///https://github.com/bevyengine/bevy/blob/main/crates/bevy_utils/src/default.rs
-// #[inline]
-// pub fn default<T: Default>() -> T {
-//     std::default::Default::default()
-// }
-
-#[derive(Clone, Eq, PartialEq, Debug, Hash)]
+#[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
+    #[default]
     Playing,
     GameOver,
 }
 
 fn main() {
     App::new()
-        // .insert_resource(WindowDescriptor {
-        //     title: "tetris".to_string(),
-        //     height: 443.,
-        //     width: 360.,
-        //     resizable: false,
-        //     ..default()
-        // })
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            window: WindowDescriptor {
+            primary_window: Some(Window{
                 title: "tetris".to_string(),
-                width: 360.,                          
-                height: 443.,               
                 resizable: false,
-              ..default()
-            },
+                resolution: (360., 443.).into(),
+                ..default()
+            }),
             ..default()
           }))
         .insert_resource(GameData::default())
-        .add_startup_system_to_stage(StartupStage::PreStartup, setup_screen)
-        .add_state(GameState::Playing)
-        //.add_plugins(DefaultPlugins)
-        .add_system_set(SystemSet::on_enter(GameState::Playing).with_system(newgame_system))
-        .add_system_set(
-            SystemSet::on_update(GameState::Playing)
-                .with_system(keyboard_system)
-                .with_system(movebrick_systrem)
-                .with_system(freezebrick_system)
-                .with_system(scoreboard_system),
+        .add_startup_system(setup_screen.in_base_set(StartupSet::PreStartup))
+        .add_state::<GameState>()
+        .add_system(newgame_system.in_schedule(OnEnter(GameState::Playing)))
+        .add_systems(
+            (
+                keyboard_system,
+                movebrick_systrem,
+                freezebrick_system,
+                scoreboard_system,
+            ).in_set(OnUpdate(GameState::Playing))
         )
-        .add_system_set(SystemSet::on_enter(GameState::GameOver).with_system(gameover_setup))
-        .add_system_set(SystemSet::on_update(GameState::GameOver).with_system(gameover_system))
+        .add_system(gameover_setup.in_schedule(OnEnter(GameState::GameOver)))
+        .add_system(gameover_system.in_set(OnUpdate(GameState::GameOver)))
         .run();
 }
 
@@ -213,7 +198,7 @@ fn freezebrick_system(
 
 fn scoreboard_system(
     mut commands: Commands,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<NextState<GameState>>,
     mut game: ResMut<GameData>,
     mut next_brick: Query<Entity, With<BrickNextBundle>>,
     mut query: ParamSet<(
@@ -308,7 +293,7 @@ fn gameover_setup(
 }
 fn gameover_system(
     mut commands: Commands,
-    mut state: ResMut<State<GameState>>,
+    mut state: ResMut<NextState<GameState>>,
     mut game: ResMut<GameData>,
     mut gameover: Query<Entity, With<GameOverText>>,
     keyboard_input: Res<Input<KeyCode>>,
