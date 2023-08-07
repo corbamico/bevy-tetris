@@ -17,28 +17,44 @@ enum GameState {
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins.set(WindowPlugin {
-            primary_window: Some(Window{
+            primary_window: Some(Window {
                 title: "tetris".to_string(),
                 resizable: false,
                 resolution: (360., 443.).into(),
                 ..default()
             }),
             ..default()
-          }))
+        }))
         .insert_resource(GameData::default())
-        .add_startup_system(setup_screen.in_base_set(StartupSet::PreStartup))
+        //.add_startup_system(setup_screen.in_base_set(StartupSet::PreStartup))
+        .add_systems(PreStartup, setup_screen)
         .add_state::<GameState>()
-        .add_system(newgame_system.in_schedule(OnEnter(GameState::Playing)))
+        //.add_system(newgame_system.in_schedule(OnEnter(GameState::Playing)))
+        .add_systems(OnEnter(GameState::Playing), newgame_system)
+        // .add_systems(
+        //     (
+        //         keyboard_system,
+        //         movebrick_systrem,
+        //         freezebrick_system,
+        //         scoreboard_system,
+        //     ).in_set(OnUpdate(GameState::Playing))
+        // )
         .add_systems(
+            Update,
             (
                 keyboard_system,
                 movebrick_systrem,
                 freezebrick_system,
                 scoreboard_system,
-            ).in_set(OnUpdate(GameState::Playing))
+            ).run_if(in_state(GameState::Playing)),
         )
-        .add_system(gameover_setup.in_schedule(OnEnter(GameState::GameOver)))
-        .add_system(gameover_system.in_set(OnUpdate(GameState::GameOver)))
+        //.add_system(gameover_setup.in_schedule(OnEnter(GameState::GameOver)))
+        .add_systems(OnEnter(GameState::GameOver), gameover_setup)
+        //.add_system(gameover_system.in_set(OnUpdate(GameState::GameOver)))
+        .add_systems(
+            Update,
+            gameover_system.run_if(in_state(GameState::GameOver)),
+        )
         .run();
 }
 
@@ -428,23 +444,23 @@ fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> Text
                 font: asset_server.load("digital7mono.ttf"),
                 font_size: 16.0,
                 color: Color::BLACK,
-            }
-            //Default::default(),
+            }, //Default::default(),
         ),
         style: Style {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            position: UiRect {
-                left: Val::Px(x),
-                top: Val::Px(y),
-                ..default()
-            },
+            // position: UiRect {
+            //     left: Val::Px(x),
+            //     top: Val::Px(y),
+            //     ..default()
+            // },
+            left: Val::Px(x),
+            top: Val::Px(y),
             ..default()
         },
         ..default()
     }
 }
-
 
 #[derive(Resource)]
 pub struct GameData {
