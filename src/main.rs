@@ -28,7 +28,7 @@ fn main() {
         .insert_resource(GameData::default())
         //.add_startup_system(setup_screen.in_base_set(StartupSet::PreStartup))
         .add_systems(PreStartup, setup_screen)
-        .add_state::<GameState>()
+        .init_state::<GameState>()
         //.add_system(newgame_system.in_schedule(OnEnter(GameState::Playing)))
         .add_systems(OnEnter(GameState::Playing), newgame_system)
         // .add_systems(
@@ -111,7 +111,7 @@ struct GameOverText;
 /// dont handle tick-tick falling
 fn keyboard_system(
     mut commands: Commands,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
     mut game: ResMut<GameData>,
     time: Res<Time>,
     mut query: Query<(Entity, &mut Transform), With<BrickBoardBundle>>,
@@ -119,7 +119,7 @@ fn keyboard_system(
     let ticked = game.keyboard_timer.tick(time.delta()).finished();
     if let Ok((moving_entity, mut transform)) = query.get_single_mut() {
         if ticked {
-            if keyboard_input.pressed(KeyCode::Left)
+            if keyboard_input.pressed(KeyCode::ArrowLeft)
                 && game
                     .board
                     .valid_brickshape(&game.moving_brick, &game.moving_orig.left())
@@ -128,7 +128,7 @@ fn keyboard_system(
                 transform.translation.x -= consts::DOT_WIDTH_PX;
             }
 
-            if keyboard_input.pressed(KeyCode::Right)
+            if keyboard_input.pressed(KeyCode::ArrowRight)
                 && game
                     .board
                     .valid_brickshape(&game.moving_brick, &game.moving_orig.right())
@@ -137,7 +137,7 @@ fn keyboard_system(
                 transform.translation.x += consts::DOT_WIDTH_PX;
             }
 
-            if keyboard_input.pressed(KeyCode::Up) {
+            if keyboard_input.pressed(KeyCode::ArrowUp) {
                 let rotated = game.moving_brick.rotate();
                 if game.board.valid_brickshape(&rotated, &game.moving_orig) {
                     spawn_brick_board(&mut commands, rotated.into(), game.moving_orig);
@@ -312,7 +312,7 @@ fn gameover_system(
     mut state: ResMut<NextState<GameState>>,
     mut game: ResMut<GameData>,
     mut gameover: Query<Entity, With<GameOverText>>,
-    keyboard_input: Res<Input<KeyCode>>,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
 ) {
     if keyboard_input.pressed(KeyCode::Space) {
         game.reset();
