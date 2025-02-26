@@ -1,16 +1,16 @@
 [package]
 authors = ["corbamico <corbamico@163.com>"]
-edition = "2021"
+edition = "2024"
 name = "bevy-tetris"
-version = "0.9.1"
+version = "0.15.1"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-bevy = "0.13.0"
-bevy_utils = "0.13.0"
-lazy_static = "1.4"
-rand = "0.8"
+bevy = "0.15"
+bevy_utils = "0.15"
+lazy_static = "1.5"
+rand = "0.9"
 
 # Enable only a small amount of optimization in debug mode
 [profile.dev]

@@ -3,6 +3,8 @@ mod bricks;
 mod consts;
 
 use bevy::prelude::*;
+//use bevy::state::app::AppExtStates as _;
+
 use bevy_utils::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
@@ -10,8 +12,13 @@ use consts::*;
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
     #[default]
+    Setup,
     Playing,
     GameOver,
+}
+
+fn transition_to_playing(mut app_state: ResMut<NextState<GameState>>) {
+    app_state.set(GameState::Playing);
 }
 
 fn main() {
@@ -26,19 +33,15 @@ fn main() {
             ..default()
         }))
         .insert_resource(GameData::default())
-        //.add_startup_system(setup_screen.in_base_set(StartupSet::PreStartup))
-        .add_systems(PreStartup, setup_screen)
+        // .add_systems(PreStartup, setup_screen)
+        // .init_state::<GameState>()
         .init_state::<GameState>()
-        //.add_system(newgame_system.in_schedule(OnEnter(GameState::Playing)))
+        .add_systems(OnEnter(GameState::Setup), setup_screen)
+        .add_systems(
+            Update,
+            transition_to_playing.run_if(in_state(GameState::Setup)),
+        )
         .add_systems(OnEnter(GameState::Playing), newgame_system)
-        // .add_systems(
-        //     (
-        //         keyboard_system,
-        //         movebrick_systrem,
-        //         freezebrick_system,
-        //         scoreboard_system,
-        //     ).in_set(OnUpdate(GameState::Playing))
-        // )
         .add_systems(
             Update,
             (
@@ -46,11 +49,10 @@ fn main() {
                 movebrick_systrem,
                 freezebrick_system,
                 scoreboard_system,
-            ).run_if(in_state(GameState::Playing)),
+            )
+                .run_if(in_state(GameState::Playing)),
         )
-        //.add_system(gameover_setup.in_schedule(OnEnter(GameState::GameOver)))
         .add_systems(OnEnter(GameState::GameOver), gameover_setup)
-        //.add_system(gameover_system.in_set(OnUpdate(GameState::GameOver)))
         .add_systems(
             Update,
             gameover_system.run_if(in_state(GameState::GameOver)),
@@ -59,9 +61,10 @@ fn main() {
 }
 
 fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands.spawn(Camera2dBundle::default());
-    commands.spawn(SpriteBundle {
-        texture: asset_server.load("screen.png"),
+    commands.spawn(Camera2d);
+
+    commands.spawn(Sprite {
+        image: asset_server.load("screen.png"),
         ..default()
     });
     commands
@@ -85,8 +88,6 @@ fn setup_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert(LevelText);
 }
 
-#[derive(Component)]
-struct DotBundle;
 #[derive(Component)]
 struct BoardBundle;
 
@@ -217,10 +218,11 @@ fn scoreboard_system(
     mut state: ResMut<NextState<GameState>>,
     mut game: ResMut<GameData>,
     mut next_brick: Query<Entity, With<BrickNextBundle>>,
+    mut writer: TextUiWriter,
     mut query: ParamSet<(
-        Query<&mut Text, With<ScoreText>>,
-        Query<&mut Text, With<LinesText>>,
-        Query<&mut Text, With<LevelText>>,
+        Query<Entity, With<ScoreText>>,
+        Query<Entity, With<LinesText>>,
+        Query<Entity, With<LevelText>>,
     )>,
 ) {
     if game.deleted_lines > 0 {
@@ -234,14 +236,17 @@ fn scoreboard_system(
             game.falling_timer
                 .set_duration(Duration::from_secs_f32(get_speed(level)));
         }
-        if let Ok(mut text) = query.p0().get_single_mut() {
-            text.sections[0].value = format!("{:06}", game.score);
+        if let Ok(text) = query.p0().get_single() {
+            //text.sections[0].value = format!("{:06}", game.score);
+            *writer.text(text, 0) = format!("{:06}", game.score);
         }
-        if let Ok(mut text) = query.p1().get_single_mut() {
-            text.sections[0].value = format!("{:06}", game.lines);
+        if let Ok(text) = query.p1().get_single() {
+            //text.sections[0].value = format!("{:06}", game.lines);
+            *writer.text(text, 0) = format!("{:06}", game.lines);
         }
-        if let Ok(mut text) = query.p2().get_single_mut() {
-            text.sections[0].value = format!("{:02}", game.level);
+        if let Ok(text) = query.p2().get_single() {
+            //text.sections[0].value = format!("{:02}", game.level);
+            *writer.text(text, 0) = format!("{:02}", game.level);
         }
     }
 
@@ -251,8 +256,9 @@ fn scoreboard_system(
     if game.freeze {
         game.freeze = false;
         game.score += SCORE_PER_DROP;
-        if let Ok(mut text) = query.p0().get_single_mut() {
-            text.sections[0].value = format!("{:06}", game.score);
+        if let Ok(text) = query.p0().get_single_mut() {
+            //text.sections[0].value = format!("{:06}", game.score);
+            *writer.text(text, 0) = format!("{:06}", game.score);
         }
 
         game.moving_orig = consts::BRICK_START_DOT;
@@ -278,7 +284,8 @@ fn scoreboard_system(
             spawn_brick_next(&mut commands, game.next_brick.into());
         } else {
             //game over!
-            let _ = state.set(GameState::GameOver);
+            //let _ = state.set(GameState::GameOver);
+            state.set(GameState::GameOver);
         }
     }
 }
@@ -320,17 +327,19 @@ fn gameover_system(
         if let Ok(entity) = gameover.get_single_mut() {
             commands.entity(entity).despawn_recursive();
         }
-        let _ = state.set(GameState::Playing);
+        //let _ = state.set(GameState::Playing);
+        state.set(GameState::Playing);
     }
 }
 
 fn newgame_system(
     mut commands: Commands,
     game: ResMut<GameData>,
+    mut writer: TextUiWriter,
     mut query: ParamSet<(
-        Query<&mut Text, With<ScoreText>>,
-        Query<&mut Text, With<LinesText>>,
-        Query<&mut Text, With<LevelText>>,
+        Query<Entity, With<ScoreText>>,
+        Query<Entity, With<LinesText>>,
+        Query<Entity, With<LevelText>>,
     )>,
 ) {
     let moving_brick = game.moving_brick;
@@ -338,27 +347,33 @@ fn newgame_system(
     spawn_brick_board(&mut commands, moving_brick.into(), BRICK_START_DOT);
     spawn_brick_next(&mut commands, next_brick.into());
 
-    if let Ok(mut text) = query.p0().get_single_mut() {
-        text.sections[0].value = format!("{:06}", game.score);
+    if let Ok(text) = query.p0().get_single_mut() {
+        //text.sections[0].value = format!("{:06}", game.score);
+        *writer.text(text, 0) = format!("{:06}", game.score);
     }
-    if let Ok(mut text) = query.p1().get_single_mut() {
-        text.sections[0].value = format!("{:06}", game.lines);
+    if let Ok(text) = query.p1().get_single_mut() {
+        //text.sections[0].value = format!("{:06}", game.lines);
+        *writer.text(text, 0) = format!("{:06}", game.lines);
     }
-    if let Ok(mut text) = query.p2().get_single_mut() {
-        text.sections[0].value = format!("{:02}", game.level);
+    if let Ok(text) = query.p2().get_single_mut() {
+        //text.sections[0].value = format!("{:02}", game.level);
+        *writer.text(text, 0) = format!("{:02}", game.level);
     }
 }
 
 fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
     commands
-        .spawn(SpriteBundle {
-            transform: Transform::from_xyz(
+        .spawn((
+            Sprite {
+                color: Color::NONE,
+                ..default()
+            },
+            Transform::from_xyz(
                 consts::NEXT_BRICK_LEFT_PX - consts::WINDOWS_WIDTH / 2.0,
                 consts::NEXT_BRICK_BOTTOM_PX - consts::WINDOWS_HEIGHT / 2.0,
-                0.0,
+                0.0, //zero,which one pixel behind the UI-screen png; cannot be seen in screen
             ),
-            ..default()
-        })
+        ))
         .insert(BrickNextBundle)
         .with_children(|parent| {
             (0..4).for_each(|i| {
@@ -369,15 +384,17 @@ fn spawn_brick_next(commands: &mut Commands, brick: Brick) {
 
 fn spawn_board(commands: &mut Commands, board: &Board) {
     commands
-        .spawn(SpriteBundle {
-            //from middle pixel to pixel of (left,bottom)
-            transform: Transform::from_xyz(
+        .spawn((
+            Sprite {
+                color: Color::NONE,
+                ..default()
+            },
+            Transform::from_xyz(
                 10.0 - consts::WINDOWS_WIDTH / 2.0 + consts::BOARD_LEFT_PX,
                 10.0 - consts::WINDOWS_HEIGHT / 2.0 + consts::BOARD_BOTTOM_PX,
                 0.0, //zero,which one pixel behind the UI-screen png; cannot be seen in screen
             ),
-            ..default()
-        })
+        ))
         .insert(BoardBundle)
         .with_children(|parent| {
             (0..consts::BOARD_X)
@@ -389,17 +406,19 @@ fn spawn_board(commands: &mut Commands, board: &Board) {
 
 fn spawn_brick_board(commands: &mut Commands, brick: Brick, dot_in_board: Dot) {
     commands
-        .spawn(SpriteBundle {
-            //from middle pixel to pixel of (left,bottom)
-            transform: Transform::from_xyz(
+        .spawn((
+            Sprite {
+                color: Color::NONE,
+                ..default()
+            },
+            Transform::from_xyz(
                 dot_in_board.0 as f32 * consts::DOT_WIDTH_PX + 10.0 - consts::WINDOWS_WIDTH / 2.0
                     + consts::BOARD_LEFT_PX,
                 dot_in_board.1 as f32 * consts::DOT_WIDTH_PX + 10.0 - consts::WINDOWS_HEIGHT / 2.0
                     + consts::BOARD_BOTTOM_PX,
                 0.0, //zero,which one pixel behind the UI-screen png; cannot be seen in screen
             ),
-            ..default()
-        })
+        ))
         .insert(BrickBoardBundle)
         .with_children(|parent| {
             (0..4).for_each(|i| {
@@ -420,46 +439,38 @@ fn spawn_dot_as_child(commands: &mut ChildBuilder, trans: Vec2) {
 }
 
 #[inline]
-fn sprit_bundle(width: f32, color: Color, trans: Vec2) -> SpriteBundle {
-    SpriteBundle {
-        transform: Transform {
-            translation: Vec3::new(trans.x, trans.y, 0.1),
-            ..default()
-        },
-        sprite: Sprite {
+fn sprit_bundle(width: f32, color: Color, trans: Vec2) -> impl Bundle {
+    (
+        Sprite {
             color,
             custom_size: Some(Vec2::new(width, width)),
             ..default()
         },
-        ..default()
-    }
+        Transform {
+            translation: Vec3::new(trans.x, trans.y, 0.1),
+            ..default()
+        },
+    )
 }
 #[inline]
-fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> TextBundle {
-    // scoreboard
-    TextBundle {
-        text: Text::from_section(
-            msg,
-            TextStyle {
-                font: asset_server.load("digital7mono.ttf"),
-                font_size: 16.0,
-                color: Color::BLACK,
-            }, //Default::default(),
-        ),
-        style: Style {
+fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> impl Bundle {
+    (
+        Text(msg.to_string()),
+        TextFont {
+            // This font is loaded and will be used instead of the default font.
+            font: asset_server.load("digital7mono.ttf"),
+            font_size: 24.0,
+            ..default()
+        },
+        TextColor(Color::BLACK),
+        Node {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
-            // position: UiRect {
-            //     left: Val::Px(x),
-            //     top: Val::Px(y),
-            //     ..default()
-            // },
             left: Val::Px(x),
             top: Val::Px(y),
             ..default()
         },
-        ..default()
-    }
+    )
 }
 
 #[derive(Resource)]

@@ -44,7 +44,7 @@ impl From<BrickShape> for Brick{
 
 impl BrickShape {
     pub fn rand() -> Self {
-        let index = rand::thread_rng().gen_range(0..BRICKS_TYPES);
+        let index = rand::rng().random_range(0..BRICKS_TYPES);
         Self(index, 0)
     }
     pub fn rotate(&self) -> Self {
@@ -62,7 +62,7 @@ impl Default for Board {
 }
 impl Board {
     fn index(dot: &Dot) -> usize {
-        (dot.0 as usize + dot.1 as usize * BOARD_X as usize) as usize
+        dot.0 as usize + dot.1 as usize * BOARD_X as usize
     }
     pub fn occupy_dot(&mut self, dot: &Dot) -> &mut Self {
         let i = Self::index(dot);

@@ -1,9 +1,9 @@
 
 use crate::bricks::{Brick, Dot};
-use crate::{Color};
+use crate::Color;
 use lazy_static::*;
 
-pub(crate) const BACKGROUND: Color = Color::rgb(158.0/255.0, 173.0/255.0, 135.0/255.0);
+pub(crate) const BACKGROUND: Color = Color::srgb(158.0/255.0, 173.0/255.0, 135.0/255.0);
 pub(crate) const WINDOWS_WIDTH: f32 = 360.0;
 pub(crate) const WINDOWS_HEIGHT: f32 = 443.0;
 
