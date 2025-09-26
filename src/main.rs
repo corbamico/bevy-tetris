@@ -5,7 +5,7 @@ mod consts;
 use bevy::prelude::*;
 //use bevy::state::app::AppExtStates as _;
 
-use bevy_utils::Duration;
+use core::time::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
 
@@ -118,7 +118,7 @@ fn keyboard_system(
     mut query: Query<(Entity, &mut Transform), With<BrickBoardBundle>>,
 ) {
     let ticked = game.keyboard_timer.tick(time.delta()).finished();
-    if let Ok((moving_entity, mut transform)) = query.get_single_mut() {
+    if let Ok((moving_entity, mut transform)) = query.single_mut() {
         if ticked {
             if keyboard_input.pressed(KeyCode::ArrowLeft)
                 && game
@@ -143,7 +143,7 @@ fn keyboard_system(
                 if game.board.valid_brickshape(&rotated, &game.moving_orig) {
                     spawn_brick_board(&mut commands, rotated.into(), game.moving_orig);
                     game.moving_brick = rotated;
-                    commands.entity(moving_entity).despawn_recursive();
+                    commands.entity(moving_entity).despawn();
                 }
             }
             if keyboard_input.pressed(KeyCode::Space) {
@@ -168,7 +168,7 @@ fn movebrick_systrem(
     mut query: Query<&mut Transform, With<BrickBoardBundle>>,
 ) {
     let ticked = game.falling_timer.tick(time.delta()).finished();
-    if let Ok(mut transform) = query.get_single_mut() {
+    if let Ok(mut transform) = query.single_mut() {
         if ticked {
             if game
                 .board
@@ -185,7 +185,7 @@ fn movebrick_systrem(
                 game.freeze = true;
                 //if we destory moving brick here.
                 //there is flash, when destory brick ,and re-draw board.
-                //commands.entity(entity).despawn_recursive();
+                //commands.entity(entity).despawn();
             }
         }
     }
@@ -201,12 +201,12 @@ fn freezebrick_system(
         game.deleted_lines = game.board.clean_lines();
 
         //destory moving brick
-        if let Ok(entity) = brick.get_single_mut() {
-            commands.entity(entity).despawn_recursive();
+        if let Ok(entity) = brick.single_mut() {
+            commands.entity(entity).despawn();
         }
         //destory board
-        if let Ok(entity) = board.get_single_mut() {
-            commands.entity(entity).despawn_recursive();
+        if let Ok(entity) = board.single_mut() {
+            commands.entity(entity).despawn();
         }
         //redraw board
         spawn_board(&mut commands, &game.board);
@@ -236,15 +236,15 @@ fn scoreboard_system(
             game.falling_timer
                 .set_duration(Duration::from_secs_f32(get_speed(level)));
         }
-        if let Ok(text) = query.p0().get_single() {
+        if let Ok(text) = query.p0().single() {
             //text.sections[0].value = format!("{:06}", game.score);
             *writer.text(text, 0) = format!("{:06}", game.score);
         }
-        if let Ok(text) = query.p1().get_single() {
+        if let Ok(text) = query.p1().single() {
             //text.sections[0].value = format!("{:06}", game.lines);
             *writer.text(text, 0) = format!("{:06}", game.lines);
         }
-        if let Ok(text) = query.p2().get_single() {
+        if let Ok(text) = query.p2().single() {
             //text.sections[0].value = format!("{:02}", game.level);
             *writer.text(text, 0) = format!("{:02}", game.level);
         }
@@ -256,7 +256,7 @@ fn scoreboard_system(
     if game.freeze {
         game.freeze = false;
         game.score += SCORE_PER_DROP;
-        if let Ok(text) = query.p0().get_single_mut() {
+        if let Ok(text) = query.p0().single_mut() {
             //text.sections[0].value = format!("{:06}", game.score);
             *writer.text(text, 0) = format!("{:06}", game.score);
         }
@@ -270,8 +270,8 @@ fn scoreboard_system(
             .valid_brickshape(&game.moving_brick, &BRICK_START_DOT)
         {
             //step 2.2 destory next_brick
-            if let Ok(entity) = next_brick.get_single_mut() {
-                commands.entity(entity).despawn_recursive();
+            if let Ok(entity) = next_brick.single_mut() {
+                commands.entity(entity).despawn();
             }
 
             //step 3.1 draw new one in start point
@@ -297,12 +297,12 @@ fn gameover_setup(
     mut next_brick: Query<Entity, With<BrickNextBundle>>,
 ) {
     //destory board
-    if let Ok(entity) = board.get_single_mut() {
-        commands.entity(entity).despawn_recursive();
+    if let Ok(entity) = board.single_mut() {
+        commands.entity(entity).despawn();
     }
     //destory next brick
-    if let Ok(entity) = next_brick.get_single_mut() {
-        commands.entity(entity).despawn_recursive();
+    if let Ok(entity) = next_brick.single_mut() {
+        commands.entity(entity).despawn();
     }
     //show GameOver
     commands
@@ -324,8 +324,8 @@ fn gameover_system(
     if keyboard_input.pressed(KeyCode::Space) {
         game.reset();
 
-        if let Ok(entity) = gameover.get_single_mut() {
-            commands.entity(entity).despawn_recursive();
+        if let Ok(entity) = gameover.single_mut() {
+            commands.entity(entity).despawn();
         }
         //let _ = state.set(GameState::Playing);
         state.set(GameState::Playing);
@@ -347,15 +347,15 @@ fn newgame_system(
     spawn_brick_board(&mut commands, moving_brick.into(), BRICK_START_DOT);
     spawn_brick_next(&mut commands, next_brick.into());
 
-    if let Ok(text) = query.p0().get_single_mut() {
+    if let Ok(text) = query.p0().single_mut() {
         //text.sections[0].value = format!("{:06}", game.score);
         *writer.text(text, 0) = format!("{:06}", game.score);
     }
-    if let Ok(text) = query.p1().get_single_mut() {
+    if let Ok(text) = query.p1().single_mut() {
         //text.sections[0].value = format!("{:06}", game.lines);
         *writer.text(text, 0) = format!("{:06}", game.lines);
     }
-    if let Ok(text) = query.p2().get_single_mut() {
+    if let Ok(text) = query.p2().single_mut() {
         //text.sections[0].value = format!("{:02}", game.level);
         *writer.text(text, 0) = format!("{:02}", game.level);
     }
@@ -426,7 +426,19 @@ fn spawn_brick_board(commands: &mut Commands, brick: Brick, dot_in_board: Dot) {
             });
         });
 }
-fn spawn_dot_as_child(commands: &mut ChildBuilder, trans: Vec2) {
+// fn spawn_dot_as_child(commands: &mut ChildBuilder, trans: Vec2) {
+//     commands
+//         .spawn(sprit_bundle(20., Color::BLACK, trans))
+//         .with_children(|parent| {
+//             parent
+//                 .spawn(sprit_bundle(16., consts::BACKGROUND, Vec2::default()))
+//                 .with_children(|parent| {
+//                     parent.spawn(sprit_bundle(12., Color::BLACK, Vec2::default()));
+//                 });
+//         });
+// }
+
+fn spawn_dot_as_child(commands: &mut ChildSpawnerCommands, trans: Vec2) {
     commands
         .spawn(sprit_bundle(20., Color::BLACK, trans))
         .with_children(|parent| {
