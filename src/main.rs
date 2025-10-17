@@ -27,7 +27,7 @@ fn main() {
             primary_window: Some(Window {
                 title: "tetris".to_string(),
                 resizable: false,
-                resolution: (360., 443.).into(),
+                resolution: (360u32, 443u32).into(),
                 ..default()
             }),
             ..default()
@@ -117,7 +117,7 @@ fn keyboard_system(
     time: Res<Time>,
     mut query: Query<(Entity, &mut Transform), With<BrickBoardBundle>>,
 ) {
-    let ticked = game.keyboard_timer.tick(time.delta()).finished();
+    let ticked = game.keyboard_timer.tick(time.delta()).is_finished();
     if let Ok((moving_entity, mut transform)) = query.single_mut() {
         if ticked {
             if keyboard_input.pressed(KeyCode::ArrowLeft)
@@ -167,7 +167,7 @@ fn movebrick_systrem(
     time: Res<Time>,
     mut query: Query<&mut Transform, With<BrickBoardBundle>>,
 ) {
-    let ticked = game.falling_timer.tick(time.delta()).finished();
+    let ticked = game.falling_timer.tick(time.delta()).is_finished();
     if let Ok(mut transform) = query.single_mut() {
         if ticked {
             if game
