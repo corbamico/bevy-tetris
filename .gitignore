@@ -11,3 +11,4 @@ Cargo.lock
 
 /.metals/
 /.vscode/
+.claude/

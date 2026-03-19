@@ -475,6 +475,7 @@ fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> impl
             ..default()
         },
         TextColor(Color::BLACK),
+        bevy::text::LineHeight::default(),
         Node {
             align_self: AlignSelf::FlexEnd,
             position_type: PositionType::Absolute,
