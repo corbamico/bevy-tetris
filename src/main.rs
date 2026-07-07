@@ -470,8 +470,8 @@ fn init_text(msg: &str, x: f32, y: f32, asset_server: &Res<AssetServer>) -> impl
         Text(msg.to_string()),
         TextFont {
             // This font is loaded and will be used instead of the default font.
-            font: asset_server.load("digital7mono.ttf"),
-            font_size: 24.0,
+            font: bevy::prelude::FontSource::Handle(asset_server.load("digital7mono.ttf")),
+            font_size: bevy::prelude::FontSize::Px(24.0),
             ..default()
         },
         TextColor(Color::BLACK),
