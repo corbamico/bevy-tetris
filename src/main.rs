@@ -180,9 +180,9 @@ fn movebrick_system(
                 transform.translation.y -= consts::DOT_WIDTH_PX;
             } else {
                 //there is no space to falling, so freeze the brick.
-                let frozon_brick = game.moving_brick;
-                let frozon_orig = game.moving_orig;
-                game.board.occupy_brickshape(&frozon_brick, &frozon_orig);
+                let frozen_brick = game.moving_brick;
+                let frozen_orig = game.moving_orig;
+                game.board.occupy_brickshape(&frozen_brick, &frozen_orig);
                 game.freeze = true;
                 //if we destory moving brick here.
                 //there is flash, when destory brick ,and re-draw board.
