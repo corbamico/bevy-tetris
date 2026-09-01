@@ -50,6 +50,7 @@ fn main() {
                 freezebrick_system,
                 scoreboard_system,
             )
+                .chain()
                 .run_if(in_state(GameState::Playing)),
         )
         .add_systems(OnEnter(GameState::GameOver), gameover_setup)
