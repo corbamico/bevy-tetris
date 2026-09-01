@@ -46,7 +46,7 @@ fn main() {
             Update,
             (
                 keyboard_system,
-                movebrick_systrem,
+                movebrick_system,
                 freezebrick_system,
                 scoreboard_system,
             )
@@ -162,7 +162,7 @@ fn keyboard_system(
 
 /// movebrick_systrem only handle tick-tick falling
 /// dont handle keyboard input
-fn movebrick_systrem(
+fn movebrick_system(
     //commands: Commands,
     mut game: ResMut<GameData>,
     time: Res<Time>,
