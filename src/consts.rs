@@ -1,9 +1,8 @@
-
-use crate::bricks::{Brick, Dot};
 use crate::Color;
+use crate::bricks::{Brick, Dot};
 use lazy_static::*;
 
-pub(crate) const BACKGROUND: Color = Color::srgb(158.0/255.0, 173.0/255.0, 135.0/255.0);
+pub(crate) const BACKGROUND: Color = Color::srgb(158.0 / 255.0, 173.0 / 255.0, 135.0 / 255.0);
 pub(crate) const WINDOWS_WIDTH: f32 = 360.0;
 pub(crate) const WINDOWS_HEIGHT: f32 = 443.0;
 
@@ -49,7 +48,7 @@ pub(crate) const TIMER_KEY_SECS: f32 = 0.100;
 lazy_static! {
     pub static ref BRICKS_DICT: Vec<Vec<Brick>> = vec![
         //O:
-        vec![Brick{dots:[Dot(1, 1), Dot(1, 2), Dot(2, 1), Dot(2, 2)]}],
+        vec![Brick{dots:[Dot(1, 0), Dot(1, 1), Dot(2, 0), Dot(2, 1)]}],
         //I:
         vec![
             Brick{dots:[Dot(0, 1), Dot(1, 1), Dot(2, 1), Dot(3, 1)]},

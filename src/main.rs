@@ -5,9 +5,9 @@ mod consts;
 use bevy::prelude::*;
 //use bevy::state::app::AppExtStates as _;
 
-use core::time::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
+use core::time::Duration;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {
@@ -46,10 +46,11 @@ fn main() {
             Update,
             (
                 keyboard_system,
-                movebrick_systrem,
+                movebrick_system,
                 freezebrick_system,
                 scoreboard_system,
             )
+                .chain()
                 .run_if(in_state(GameState::Playing)),
         )
         .add_systems(OnEnter(GameState::GameOver), gameover_setup)
@@ -161,7 +162,7 @@ fn keyboard_system(
 
 /// movebrick_systrem only handle tick-tick falling
 /// dont handle keyboard input
-fn movebrick_systrem(
+fn movebrick_system(
     //commands: Commands,
     mut game: ResMut<GameData>,
     time: Res<Time>,
@@ -179,9 +180,9 @@ fn movebrick_systrem(
                 transform.translation.y -= consts::DOT_WIDTH_PX;
             } else {
                 //there is no space to falling, so freeze the brick.
-                let frozon_brick = game.moving_brick;
-                let frozon_orig = game.moving_orig;
-                game.board.occupy_brickshape(&frozon_brick, &frozon_orig);
+                let frozen_brick = game.moving_brick;
+                let frozen_orig = game.moving_orig;
+                game.board.occupy_brickshape(&frozen_brick, &frozen_orig);
                 game.freeze = true;
                 //if we destory moving brick here.
                 //there is flash, when destory brick ,and re-draw board.
