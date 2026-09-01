@@ -5,9 +5,9 @@ mod consts;
 use bevy::prelude::*;
 //use bevy::state::app::AppExtStates as _;
 
-use core::time::Duration;
 use bricks::{Board, Brick, BrickShape, Dot};
 use consts::*;
+use core::time::Duration;
 
 #[derive(Debug, Clone, Copy, Default, Eq, PartialEq, Hash, States)]
 enum GameState {

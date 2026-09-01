@@ -36,8 +36,8 @@ pub struct Brick {
 #[derive(Copy, Clone, Resource)]
 pub struct BrickShape(pub usize, pub usize);
 
-impl From<BrickShape> for Brick{
-    fn from(bs:BrickShape)->Brick{
+impl From<BrickShape> for Brick {
+    fn from(bs: BrickShape) -> Brick {
         BRICKS_DICT[bs.0][bs.1]
     }
 }
@@ -79,16 +79,12 @@ impl Board {
 
     pub fn occupy_brickshape(&mut self, brick_shape: &BrickShape, orig: &Dot) {
         let brick = Brick::from(*brick_shape);
-        self.occupy_brick(&brick,orig)
+        self.occupy_brick(&brick, orig)
     }
 
     pub fn occupied_dot(&self, dot: &Dot) -> bool {
         let i = Self::index(dot);
-        if i < BOARD_X_Y {
-            self.0[i]
-        } else {
-            false
-        }
+        if i < BOARD_X_Y { self.0[i] } else { false }
     }
     pub fn conflict_brick(&self, brick: &Brick, orig: &Dot) -> bool {
         self.occupied_dot(&brick.dots[0].with_orignal_dot(orig))
