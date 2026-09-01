@@ -49,7 +49,7 @@ pub(crate) const TIMER_KEY_SECS: f32 = 0.100;
 lazy_static! {
     pub static ref BRICKS_DICT: Vec<Vec<Brick>> = vec![
         //O:
-        vec![Brick{dots:[Dot(1, 1), Dot(1, 2), Dot(2, 1), Dot(2, 2)]}],
+        vec![Brick{dots:[Dot(1, 0), Dot(1, 1), Dot(2, 0), Dot(2, 1)]}],
         //I:
         vec![
             Brick{dots:[Dot(0, 1), Dot(1, 1), Dot(2, 1), Dot(3, 1)]},
